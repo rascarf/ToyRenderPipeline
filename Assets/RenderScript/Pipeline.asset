@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e62df6387c115f24aad5ebb18da2ef08, type: 3}
+  m_Name: Pipeline
+  m_EditorClassIdentifier: 
+  DiffuseIBL: {fileID: 8900000, guid: f699f48d7be54e5469eed08c6b19c364, type: 3}
+  SpecularIBL: {fileID: 8900000, guid: 9bde756ea95f0874f83aee4c8abced16, type: 3}
+  BrdfLut: {fileID: 2800000, guid: 89252e11f7e138d4d8c66e868b8d5810, type: 3}
+  BlueNoiseTex: {fileID: 2800000, guid: 8cbb096386d91364f9940bd1d7bd53b6, type: 3}
+  cmsSettings:
+    MaxDistance: 200
+    UsingShadowMask: 0
+    Level0:
+      ShadingPointNormalBias: 0.1
+      DepthNormalBias: 0.005
+      PcssSearchRadius: 1
+      PcssFilterRadius: 7
+    Level1:
+      ShadingPointNormalBias: 0.1
+      DepthNormalBias: 0.005
+      PcssSearchRadius: 1
+      PcssFilterRadius: 7
+    Level2:
+      ShadingPointNormalBias: 0.1
+      DepthNormalBias: 0.005
+      PcssSearchRadius: 1
+      PcssFilterRadius: 7
+    Level3:
+      ShadingPointNormalBias: 0.1
+      DepthNormalBias: 0.005
+      PcssSearchRadius: 1
+      PcssFilterRadius: 7
