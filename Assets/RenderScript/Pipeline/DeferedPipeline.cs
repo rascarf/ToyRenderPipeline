@@ -12,6 +12,7 @@ public class DeferedPipeline : RenderPipeline
 
     public CSMSettings CsmSettings;
     public Texture BlueNoiseTex;
+    public ComputeShader TestComputeShader;
 
     //GBuffers
     RenderTexture GDepth;
@@ -19,6 +20,7 @@ public class DeferedPipeline : RenderPipeline
     RenderTargetIdentifier[] GBufferID = new RenderTargetIdentifier[4];
 
     RenderTexture ShadowStrengthTex;
+    RenderTexture ShadowMask;
 
     //Shadow
     CSM csm;
@@ -26,6 +28,9 @@ public class DeferedPipeline : RenderPipeline
     public int ShadowMapResolution = 1024;
 
     public float OrthoDistance = 500.0f; //[-500,500]
+
+    RenderTexture Tex;
+    RenderTexture Tex2;
 
     public DeferedPipeline()
     {
@@ -48,6 +53,8 @@ public class DeferedPipeline : RenderPipeline
 
         ShadowStrengthTex = new RenderTexture(Screen.width, Screen.height, 0,RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
 
+        ShadowMask = new RenderTexture(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+
         csm = new CSM();
     }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
@@ -68,6 +75,7 @@ public class DeferedPipeline : RenderPipeline
         Shader.SetGlobalTexture("_GDepth", GDepth);
         Shader.SetGlobalTexture("_NoiseTex", BlueNoiseTex);
         Shader.SetGlobalTexture("_ShadowStrength", ShadowStrengthTex);
+        Shader.SetGlobalTexture("_ShadowMask", ShadowMask);
 
         Shader.SetGlobalFloat("_Far", camera.farClipPlane);
         Shader.SetGlobalFloat("_Near", camera.nearClipPlane);
@@ -87,7 +95,6 @@ public class DeferedPipeline : RenderPipeline
         ShadowMappingPass(context, camera);
         LightPass(context, camera);
         SkyDomePass(context, camera);
-
     }
 
     void DepthOnlyPass(ScriptableRenderContext context, Camera Camera)
@@ -175,18 +182,26 @@ public class DeferedPipeline : RenderPipeline
         CommandBuffer cmd = new CommandBuffer();
         cmd.name = "ShadowMapPass";
 
-        RenderTexture HorizontalRT = RenderTexture.GetTemporary(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
-        RenderTexture VerticalRT = RenderTexture.GetTemporary(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+        RenderTexture tempTex1 = RenderTexture.GetTemporary(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+        RenderTexture tempTex2 = RenderTexture.GetTemporary(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+        RenderTexture tempTex3 = RenderTexture.GetTemporary(Screen.width, Screen.height, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+
+        //如果需要用到Mask
+        if (CsmSettings.UsingShadowMask)
+        {
+            //生成Mask
+            cmd.Blit(GBufferID[0], tempTex1, new Material(Shader.Find("DeferedRP/ShadowMaskPass")));
+            cmd.Blit(tempTex1, tempTex2, new Material(Shader.Find("DeferedRP/HorizontalBlur")));
+            cmd.Blit(tempTex2, ShadowMask, new Material(Shader.Find("DeferedRP/VerticalBlur")));
+        }
+
+        cmd.Blit(GBufferID[0], tempTex3, new Material(Shader.Find("DeferedRP/ShadowMappingPass")));
+        cmd.Blit(tempTex3, ShadowStrengthTex, new Material(Shader.Find("DeferedRP/Blur")));
 
 
-        cmd.Blit(GBufferID[0], HorizontalRT, new Material(Shader.Find("DeferedRP/HorizontalBlur")));
-
-        cmd.Blit(HorizontalRT, VerticalRT, new Material(Shader.Find("DeferedRP/VerticalBlur")));
-
-        cmd.Blit(VerticalRT, ShadowStrengthTex, new Material(Shader.Find("DeferedRP/ShadowMappingPass")));
-
-        RenderTexture.ReleaseTemporary(HorizontalRT);
-        RenderTexture.ReleaseTemporary(VerticalRT);
+        RenderTexture.ReleaseTemporary(tempTex1);
+        RenderTexture.ReleaseTemporary(tempTex2);
+        RenderTexture.ReleaseTemporary(tempTex3);
 
         context.ExecuteCommandBuffer(cmd);
         context.Submit();

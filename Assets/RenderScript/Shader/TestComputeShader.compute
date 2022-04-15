@@ -1,0 +1,24 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+
+RWTexture2D<float4> Result;
+RWTexture2D<float4> From;
+
+[numthreads(16,16,1)]
+void CSMain 
+(
+    uint3 GroupID : SV_GROUPID,
+    uint3 GroupThreadId :SV_GROUPTHREADID,
+    uint3 PixelId : SV_DISPATCHTHREADID
+    )
+{
+    Result[PixelId.xy] = From[PixelId.xy];
+    Result[GroupThreadId.xy] = float4(GroupThreadId.x, GroupThreadId.y, 0, 1);
+}
+
+
+//DispatchThreadID ： Pixel 位置 用得最多
+//GroupThreadID ：单独线程组内的ID(上面的NumThreads(x，y，1)中的哪个)
+//GroupID ：线程组的ID（Dispatch(Width / x ,Height / y )）中的哪个
+//常用的就这仨

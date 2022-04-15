@@ -75,7 +75,8 @@ Shader "DeferedRP/LightPass"
 
                 float3 color = float3(0.0,0.0,0.0);
 
-                float ShadowStrength = tex2D(_ShadowStrength,uv);
+                float ShadowStrength = tex2D(_ShadowStrength,uv); 
+
 
                 // 计算光照
                 float3 Direct = PBR(N, V, L, albedo, radiance, roughness, metallic);
@@ -85,6 +86,12 @@ Shader "DeferedRP/LightPass"
                 color += Direct * ShadowStrength;
                 color += ambient * occlusion;
                 color += emission;
+
+                // //检测点在半影区域内
+                // if(ShadowStrength > 0 && ShadowStrength < 1 )
+                // {
+                //     return float4(1.0,0,0,0);
+                // }
 
                 return float4(color, 1);
             }

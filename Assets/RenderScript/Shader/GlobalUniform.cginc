@@ -9,7 +9,7 @@ samplerCUBE _SpecularIBL;
 sampler2D _BrdfIBL;
 sampler2D _NoiseTex;
 
-
+sampler2D _ShadowMask;
 sampler2D _ShadowStrength;
 sampler2D _ShadowTex0;
 sampler2D _ShadowTex1;
@@ -41,6 +41,11 @@ float _ShadingPointNormalBias1;
 float _ShadingPointNormalBias2;
 float _ShadingPointNormalBias3;
 
+float _DepthNormalBias0;
+float _DepthNormalBias1;
+float _DepthNormalBias2;
+float _DepthNormalBias3;
+
 float4x4 _ShadowVpMatrix0;
 float4x4 _ShadowVpMatrix1;
 float4x4 _ShadowVpMatrix2;
@@ -49,7 +54,7 @@ float4x4 _ShadowVpMatrix3;
 float4x4 _vpMatrix;
 float4x4 _vpMatrixInv;
 
-
+float _UsingShadowMask;
 float _OrthoDistance;
 float _ShadowMapResolution;
 float _NoiseTexResolution;
