@@ -9,7 +9,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{80C2C197-B9C3-B084-276C-D02F306B76B7}</ProjectGuid>
+    <ProjectGuid>{49C1A048-C122-C8FB-92A4-F97641853757}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -214,12 +214,15 @@
     <None Include="Assets\RenderScript\Shader\BRDF.cginc" />
     <None Include="Assets\RenderScript\Shader\LightPass.shader" />
     <None Include="Assets\RenderScript\Shader\Random.cginc" />
+    <None Include="Assets\RenderScript\Shader\Blur.shader" />
+    <None Include="Assets\RenderScript\Shader\TestComputeShader.compute" />
     <None Include="Assets\RenderScript\Shader\ShadowMappingPass.shader" />
     <None Include="Assets\UniGLTF\UniUnlit\Resources\UniUnlit.shader" />
     <None Include="Assets\RenderScript\Shader\HorizontalBlur.shader" />
     <None Include="Assets\RenderScript\Shader\GlobalUniform.cginc" />
     <None Include="Assets\UniGLTF\Resources\Shaders\NormalMapEncoder.shader" />
     <None Include="Assets\UniGLTF\Resources\Shaders\StandardVColor.shader" />
+    <None Include="Assets\RenderScript\Shader\ShadowMask.shader" />
     <None Include="Assets\RenderScript\Shader\GBuffer.shader" />
   </ItemGroup>
   <ItemGroup>

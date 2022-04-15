@@ -56,6 +56,7 @@ Shader "DeferedRP/ShadowMappingPass"
                 worldPos /= worldPos.w;
 
                 float4 worldPosOffset = worldPos;
+                
                 //Shadow Bias
                 float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
                 float bias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.001);
@@ -67,13 +68,17 @@ Shader "DeferedRP/ShadowMappingPass"
                 float rotateAngle = rand(seed) * 2.0 * 3.1415926;
                 rotateAngle = tex2D(_NoiseTex, uv_noi*0.5).r * 2.0 * 3.1415926;
 
+                if(_UsingShadowMask)
+                {
+                    float mask = tex2D(_ShadowMask,uv).r;
+
+                    if(0.0000005>mask) return 0;
+                    
+                    if(mask>0.9999995) return 1;
+                }
+
                 //根据深度决定使用哪一级阴影
                 float Shadow = 1.0f;
-                       
-                // float Shadow1 = PCF3X3(worldPos,_ShadowTex1,_ShadowVpMatrix1,_ShadowMapResolution,0.001);
-                // float Shadow1 = ShadowMapPCSS(worldOffset,_ShadowTex1,_ShadowVpMatrix1,_OrthoWidth1,_OrthoDistance,_ShadowMapResolution,rotateAngle,_PcssSearchRadius1,_PcssFilterRadius1);
-                // float Shadow2 = ShadowMap01(worldOffset,_ShadowTex2,_ShadowVpMatrix2);
-                // float Shadow3 = ShadowMap01(worldOffset,_ShadowTex3,_ShadowVpMatrix3);
 
                 float3 color = float3(0,0,0);
 

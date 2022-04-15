@@ -16,26 +16,27 @@ MonoBehaviour:
   SpecularIBL: {fileID: 8900000, guid: 9bde756ea95f0874f83aee4c8abced16, type: 3}
   BrdfLut: {fileID: 2800000, guid: 89252e11f7e138d4d8c66e868b8d5810, type: 3}
   BlueNoiseTex: {fileID: 2800000, guid: 8cbb096386d91364f9940bd1d7bd53b6, type: 3}
+  TestComputeShader: {fileID: 7200000, guid: 3817b1000c0fd734db4e44e61b426e9d, type: 3}
   cmsSettings:
     MaxDistance: 200
-    UsingShadowMask: 0
+    UsingShadowMask: 1
     Level0:
       ShadingPointNormalBias: 0.1
-      DepthNormalBias: 0.005
-      PcssSearchRadius: 1
+      DepthNormalBias: 0.025
+      PcssSearchRadius: 0.75
       PcssFilterRadius: 7
     Level1:
       ShadingPointNormalBias: 0.1
       DepthNormalBias: 0.005
-      PcssSearchRadius: 1
+      PcssSearchRadius: 0.75
       PcssFilterRadius: 7
     Level2:
       ShadingPointNormalBias: 0.1
       DepthNormalBias: 0.005
       PcssSearchRadius: 1
-      PcssFilterRadius: 7
+      PcssFilterRadius: 3
     Level3:
       ShadingPointNormalBias: 0.1
       DepthNormalBias: 0.005
       PcssSearchRadius: 1
-      PcssFilterRadius: 7
+      PcssFilterRadius: 3

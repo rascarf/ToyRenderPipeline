@@ -13,6 +13,8 @@ public class DeferedPipelineAsset : RenderPipelineAsset
     public Texture BrdfLut;
     public Texture BlueNoiseTex;
 
+    public ComputeShader TestComputeShader;
+
     [SerializeField] 
     public CSMSettings cmsSettings;
 
@@ -25,6 +27,7 @@ public class DeferedPipelineAsset : RenderPipelineAsset
         rp.SpecularIBL = SpecularIBL;
         rp.CsmSettings = cmsSettings; 
         rp.BlueNoiseTex = BlueNoiseTex;
+        rp.TestComputeShader = TestComputeShader;
 
         return rp;
     }

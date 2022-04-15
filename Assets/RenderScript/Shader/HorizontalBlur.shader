@@ -57,7 +57,7 @@ Shader "DeferedRP/HorizontalBlur"
                 float weight = 0;
                 float r = 3;
 
-                //计算Camera和当前像素点的距离
+                //计算Camera和当前像素点的距离做权重
                 float Dis = distance(_WorldSpaceCameraPos.xyz,worldPos.xyz);
                 float Radius = 1.0 / (pow(Dis,1.2) * 0.01 + 0.01);
 
