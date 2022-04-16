@@ -19,7 +19,7 @@ MonoBehaviour:
   TestComputeShader: {fileID: 7200000, guid: 3817b1000c0fd734db4e44e61b426e9d, type: 3}
   cmsSettings:
     MaxDistance: 200
-    UsingShadowMask: 0
+    UsingShadowMask: 1
     Level0:
       ShadingPointNormalBias: 0.1
       DepthNormalBias: 0.025
@@ -27,16 +27,16 @@ MonoBehaviour:
       PcssFilterRadius: 7
     Level1:
       ShadingPointNormalBias: 0.1
-      DepthNormalBias: 0.005
+      DepthNormalBias: 0.025
       PcssSearchRadius: 0.75
       PcssFilterRadius: 7
     Level2:
       ShadingPointNormalBias: 0.1
       DepthNormalBias: 0.005
       PcssSearchRadius: 1
-      PcssFilterRadius: 3
+      PcssFilterRadius: 7
     Level3:
       ShadingPointNormalBias: 0.1
       DepthNormalBias: 0.005
       PcssSearchRadius: 1
-      PcssFilterRadius: 3
+      PcssFilterRadius: 7

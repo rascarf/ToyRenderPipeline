@@ -215,6 +215,7 @@
     <None Include="Assets\RenderScript\Shader\BRDF.cginc" />
     <None Include="Assets\RenderScript\Shader\LightPass.shader" />
     <None Include="Assets\RenderScript\Shader\Random.cginc" />
+    <None Include="Assets\RenderScript\Shader\ESMShadowMapping.shader" />
     <None Include="Assets\RenderScript\Shader\Blur.shader" />
     <None Include="Assets\RenderScript\Shader\TestComputeShader.compute" />
     <None Include="Assets\RenderScript\Shader\ShadowMappingPass.shader" />

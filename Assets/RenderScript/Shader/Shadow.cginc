@@ -200,44 +200,44 @@ float FilterESM(float2 uv,float _ShadowMapResolution,float _ESMConst,sampler2D _
     float CD = 0.0;
     float2 uvOffset = 1.0 / _ShadowMapResolution;
 
-    //高斯滤波
-    const float gussianKernel[9] = 
-        {
-            0.077847, 0.123317, 0.077847,
-            0.123317, 0.195346, 0.123317,
-            0.077847, 0.123317, 0.077847,
-        };
-
-    for (int x = -1; x <= 1; ++x) 
-    {
-        for (int y = -1; y <= 1; ++y) 
-        {
-
-            float d = tex2D(_ShadowTex, uv + float2(x, y) * uvOffset).r;
-            d = 1.0 -d;
-
-            float weight = gussianKernel[x * 3 + y + 4];
-            CD += weight * exp(_ESMConst * (d));
-        }
-    }
-    
-    //距离滤波
-    // float4 TexCol = 0;
-    // float v = 0;
-    // float ALLp = 0;
-    // int c = 3;  
-    // for (int x = -c; x <= c; ++x) 
-    // {
-    //     for (int y = -c; y <= c; ++y) 
+    // //高斯滤波
+    // const float gussianKernel[9] = 
     //     {
-    //         float p = 1.0 / max(0.5,pow(length(float2(x,y)),2));
+    //         0.077847, 0.123317, 0.077847,
+    //         0.123317, 0.195346, 0.123317,
+    //         0.077847, 0.123317, 0.077847,
+    //     };
 
-    //         v += exp(80 * (1 - tex2D(_ShadowTex,uv + float2(x,y) / 1024.0).r)) * p;
+    // for (int x = -1; x <= 1; ++x) 
+    // {
+    //     for (int y = -1; y <= 1; ++y) 
+    //     {
 
-    //         ALLp += p;
+    //         float d = tex2D(_ShadowTex, uv + float2(x, y) * uvOffset).r;
+    //         d = 1.0 -d;
+
+    //         float weight = gussianKernel[x * 3 + y + 4];
+    //         CD += weight * exp(_ESMConst * (d));
     //     }
     // }
-    // CD = v / ALLp;
+    
+    //距离滤波
+    float4 TexCol = 0;
+    float v = 0;
+    float ALLp = 0;
+    int c = 3;  
+    for (int x = -c; x <= c; ++x) 
+    {
+        for (int y = -c; y <= c; ++y) 
+        {
+            float p = 1.0 / max(0.5,pow(length(float2(x,y)),2));
+
+            v += exp(80 * (1 - tex2D(_ShadowTex,uv + float2(x,y) / 1024.0).r)) * p;
+
+            ALLp += p;
+        }
+    }
+    CD = v / ALLp;
 
 
     return CD;
