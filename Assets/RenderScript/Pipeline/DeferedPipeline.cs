@@ -94,7 +94,7 @@ public class DeferedPipeline : RenderPipeline
         Shader.SetGlobalFloat("_ShadowMapResolution", ShadowMapResolution);
         Shader.SetGlobalFloat("_NoiseTexResolution", BlueNoiseTex.width);
 
-        Shader.SetGlobalFloat("_ESMConst", 10.0f);
+        Shader.SetGlobalFloat("_ESMConst", 120.0f);
 
         for (int i = 0; i < 4; i++)
         {

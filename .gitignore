@@ -1,3 +1,6 @@
 .vs
 Logs
 Temp
+/Library/Artifacts
+Artifacts
+ShaderCache
