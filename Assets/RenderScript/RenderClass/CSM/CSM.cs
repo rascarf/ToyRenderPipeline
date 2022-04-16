@@ -15,7 +15,7 @@ public class CSM
 {
     MainCameraSettings settings;
 
-    public float[] Splts = { 0.07f, 0.13f, 0.25f, 0.55f };
+    public float[] Splts = { 0.15f, 0.20f, 0.35f, 0.55f };
     public float[] OrthoWidths = new float[4];
 
     //主相机的近平面远平面

@@ -25,7 +25,7 @@ public class DeferedPipeline : RenderPipeline
     RenderTexture ShadowMask;
 
     //PreFilter Shadow
-    bool bUseESM = false;
+    bool bUseESM = true;
     bool bUseFilterShadowMap = true;
 
     //Shadow
@@ -34,7 +34,9 @@ public class DeferedPipeline : RenderPipeline
     public int ShadowMapResolution = 1024;
     public float OrthoDistance = 500.0f;
 
-
+    //TAA
+    TAAPass TaaPass;
+    public bool bUseTaa;
     public DeferedPipeline()
     {
         GDepth = new RenderTexture(Screen.width,Screen.height,24,RenderTextureFormat.Depth,RenderTextureReadWrite.Linear);
@@ -67,15 +69,22 @@ public class DeferedPipeline : RenderPipeline
 
         ShadowMask = new RenderTexture(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
 
-
         csm = new CSM();
+        TaaPass = new TAAPass();
     }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
         Camera camera = cameras[0];
 
+        if(bUseTaa)
+        {
+            TaaPass.Camera = camera;
+            TaaPass.PreCull();
+        }
+
         Matrix4x4 viewMatrix = camera.worldToCameraMatrix;
         Matrix4x4 projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
+
         Matrix4x4 vpMatrix = projMatrix * viewMatrix;
         Matrix4x4 vpMatrixInv = vpMatrix.inverse;
 
@@ -97,8 +106,8 @@ public class DeferedPipeline : RenderPipeline
         Shader.SetGlobalFloat("_OrthoDistance", OrthoDistance);
         Shader.SetGlobalFloat("_ShadowMapResolution", ShadowMapResolution);
         Shader.SetGlobalFloat("_NoiseTexResolution", BlueNoiseTex.width);
-
         Shader.SetGlobalFloat("_ESMConst", 80.0f);
+
 
         for (int i = 0; i < 4; i++)
         {
@@ -107,6 +116,20 @@ public class DeferedPipeline : RenderPipeline
 
         DepthOnlyPass(context, camera);
         GBufferPass(context, camera);
+
+        if(bUseTaa)
+        {
+            TaaPass.OnPostRender();
+
+             viewMatrix = camera.worldToCameraMatrix;
+             projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
+
+             vpMatrix = projMatrix * viewMatrix;
+             vpMatrixInv = vpMatrix.inverse;
+
+            Shader.SetGlobalMatrix("_vpMatrix", vpMatrix);
+            Shader.SetGlobalMatrix("_vpMatrixInv", vpMatrixInv);
+        }
 
         if(bUseFilterShadowMap)
         {
@@ -118,7 +141,13 @@ public class DeferedPipeline : RenderPipeline
         }
     
         LightPass(context, camera);
+
         SkyDomePass(context, camera);
+
+        if (bUseTaa)
+        {
+            TAAPass(context, camera);
+        }   
     }
 
     void DepthOnlyPass(ScriptableRenderContext context, Camera Camera)
@@ -296,4 +325,9 @@ public class DeferedPipeline : RenderPipeline
 
         context.Submit();
     }
+    void TAAPass(ScriptableRenderContext context,Camera Camera)
+    {
+        TaaPass.OnRender(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, context);
+    }
+
 }

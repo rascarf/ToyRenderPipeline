@@ -6,14 +6,14 @@ using UnityEngine.Rendering;
 [CreateAssetMenu(menuName = "Rendering/DeferedPipeline")]
 public class DeferedPipelineAsset : RenderPipelineAsset
 {
-    // Start is called before the first frame update
-
     public Cubemap DiffuseIBL;
     public Cubemap SpecularIBL;
     public Texture BrdfLut;
     public Texture BlueNoiseTex;
 
     public ComputeShader TestComputeShader;
+
+    public bool Taa;
 
     [SerializeField] 
     public CSMSettings cmsSettings;
@@ -28,6 +28,7 @@ public class DeferedPipelineAsset : RenderPipelineAsset
         rp.CsmSettings = cmsSettings; 
         rp.BlueNoiseTex = BlueNoiseTex;
         rp.TestComputeShader = TestComputeShader;
+        rp.bUseTaa = Taa;
 
         return rp;
     }
