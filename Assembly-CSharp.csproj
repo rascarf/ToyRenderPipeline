@@ -209,6 +209,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\RenderScript\Shader\Shadow.cginc" />
+    <None Include="Assets\RenderScript\Shader\VSMShadowMapping.shader" />
     <None Include="Assets\RenderScript\Shader\VerticalBlur.shader" />
     <None Include="Assets\UniGLTF\Resources\Shaders\NormalMapDecoder.shader" />
     <None Include="Assets\RenderScript\Shader\ESMFilter.shader" />
@@ -218,6 +219,7 @@
     <None Include="Assets\RenderScript\Shader\ESMShadowMapping.shader" />
     <None Include="Assets\RenderScript\Shader\Blur.shader" />
     <None Include="Assets\RenderScript\Shader\TestComputeShader.compute" />
+    <None Include="Assets\RenderScript\Shader\VSMFilter.shader" />
     <None Include="Assets\RenderScript\Shader\ShadowMappingPass.shader" />
     <None Include="Assets\UniGLTF\UniUnlit\Resources\UniUnlit.shader" />
     <None Include="Assets\RenderScript\Shader\HorizontalBlur.shader" />

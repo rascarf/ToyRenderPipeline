@@ -194,11 +194,9 @@ float ShadowMapPCSS
 
     return 1.0 - Shadow;
 }
-
 float FilterESM(float2 uv,float _ShadowMapResolution,float _ESMConst,sampler2D _ShadowTex)
 {
     float CD = 0.0;
-    float2 uvOffset = 1.0 / _ShadowMapResolution;
 
     // //高斯滤波
     // const float gussianKernel[9] = 
@@ -258,4 +256,44 @@ float ESM(float4 WorldPos,sampler2D _ShadowMap,float4x4 _ShadowVpMatrix,float ES
     float esm = saturate((exp(-ESMConst * d) * ZBase));
 
     return esm ;
+}
+
+float2 FilterVSM(float2 uv,float _ShadowMapResolution,sampler2D _ShadowTex)
+{
+    int c = 5;
+    float2 v = 0;
+    float Allp = 0;
+
+    for(int x = -c ; x <= c ; x++)
+    {
+        for(int y = -c ; y <= c;y++)
+        {
+            float p = 1.0 / max(0.5,pow(length(float2(x,y)),2));
+            float d = (1.0 - tex2D(_ShadowTex, uv + float2(x, y) / _ShadowMapResolution).r);
+            
+            v.x += d * p;
+            v.y += d * d * p;
+            Allp += p;
+        }
+    }
+    
+    return v / Allp;
+}
+
+float VSM(float4 WorldPos,sampler2D _ShadowMap,float4x4 _ShadowVpMatrix)
+{
+    float4 ShadowNdc = mul(_ShadowVpMatrix,WorldPos);
+    ShadowNdc /= ShadowNdc.w;
+    float2 uv = ShadowNdc.xy * 0.5 + 0.5;
+
+    float d = 1.0 - ShadowNdc.z;
+
+    float Shadow = 0;
+    float2 ZBase = tex2D(_ShadowMap,uv).rg;
+    float E = ZBase.x;
+    float Q = ZBase.y;
+    float m = max(0.000001,Q - E * E);
+    float vsm = d < E ? 1 : m / (m + (d - E) * (d - E));
+
+    return vsm;
 }

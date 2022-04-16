@@ -24,12 +24,14 @@ public class DeferedPipeline : RenderPipeline
     RenderTexture ShadowStrengthTex;
     RenderTexture ShadowMask;
 
+    //PreFilter Shadow
+    bool bUseESM = false;
+    bool bUseFilterShadowMap = true;
+
     //Shadow
-    bool bUseESM = true;
     CSM csm;
     RenderTexture[] ShadowTextures = new RenderTexture[4];
     public int ShadowMapResolution = 1024;
-
     public float OrthoDistance = 500.0f;
 
 
@@ -41,10 +43,10 @@ public class DeferedPipeline : RenderPipeline
         GBuffer[2] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB64, RenderTextureReadWrite.Linear);
         GBuffer[3] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
 
-        FilterShadowTextures[0] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
-        FilterShadowTextures[1] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
-        FilterShadowTextures[2] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
-        FilterShadowTextures[3] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
+        FilterShadowTextures[0] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
+        FilterShadowTextures[1] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
+        FilterShadowTextures[2] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
+        FilterShadowTextures[3] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
 
         FilterShadowTextures[0].filterMode = FilterMode.Bilinear;
         FilterShadowTextures[1].filterMode = FilterMode.Bilinear;
@@ -106,7 +108,7 @@ public class DeferedPipeline : RenderPipeline
         DepthOnlyPass(context, camera);
         GBufferPass(context, camera);
 
-        if(bUseESM)
+        if(bUseFilterShadowMap)
         {
             FilterShadowMap(context, camera);
         }
@@ -204,18 +206,34 @@ public class DeferedPipeline : RenderPipeline
         CommandBuffer cmd = new CommandBuffer();
         cmd.name = "FilterShadowMapPass";
 
-        cmd.Blit(ShadowTextures[0], FilterShadowTextures[0], new Material(Shader.Find("DeferedRP/ESMFilter")));
-        cmd.Blit(ShadowTextures[1], FilterShadowTextures[1], new Material(Shader.Find("DeferedRP/ESMFilter")));
-        cmd.Blit(ShadowTextures[2], FilterShadowTextures[2], new Material(Shader.Find("DeferedRP/ESMFilter")));
-        cmd.Blit(ShadowTextures[3], FilterShadowTextures[3], new Material(Shader.Find("DeferedRP/ESMFilter")));
-
-        for (int i = 0; i < 4; i++)
+        if(bUseESM)
         {
-            Shader.SetGlobalTexture("_ESM" + i, FilterShadowTextures[i]);
+            cmd.Blit(ShadowTextures[0], FilterShadowTextures[0], new Material(Shader.Find("DeferedRP/ESMFilter")));
+            cmd.Blit(ShadowTextures[1], FilterShadowTextures[1], new Material(Shader.Find("DeferedRP/ESMFilter")));
+            cmd.Blit(ShadowTextures[2], FilterShadowTextures[2], new Material(Shader.Find("DeferedRP/ESMFilter")));
+            cmd.Blit(ShadowTextures[3], FilterShadowTextures[3], new Material(Shader.Find("DeferedRP/ESMFilter")));
+
+            for (int i = 0; i < 4; i++)
+            {
+                Shader.SetGlobalTexture("_ESM" + i, FilterShadowTextures[i]);
+            }
+
+            cmd.Blit(GBufferID[0], ShadowStrengthTex, new Material(Shader.Find("DeferedRP/ESMShadowMappingPass")));
         }
+        else
+        {
+            cmd.Blit(ShadowTextures[0], FilterShadowTextures[0], new Material(Shader.Find("DeferedRP/VSMFilter")));
+            cmd.Blit(ShadowTextures[1], FilterShadowTextures[1], new Material(Shader.Find("DeferedRP/VSMFilter")));
+            cmd.Blit(ShadowTextures[2], FilterShadowTextures[2], new Material(Shader.Find("DeferedRP/VSMFilter")));
+            cmd.Blit(ShadowTextures[3], FilterShadowTextures[3], new Material(Shader.Find("DeferedRP/VSMFilter")));
 
+            for (int i = 0; i < 4; i++)
+            {
+                Shader.SetGlobalTexture("_ESM" + i, FilterShadowTextures[i]);
+            }
 
-        cmd.Blit(GBufferID[0], ShadowStrengthTex, new Material(Shader.Find("DeferedRP/ESMShadowMappingPass")));
+            cmd.Blit(GBufferID[0], ShadowStrengthTex, new Material(Shader.Find("DeferedRP/VSMShadowMappingPass")));
+        }
 
         context.ExecuteCommandBuffer(cmd);
         context.Submit();
