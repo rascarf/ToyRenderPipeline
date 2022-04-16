@@ -197,37 +197,50 @@ float ShadowMapPCSS
 
 float FilterESM(float2 uv,float _ShadowMapResolution,float _ESMConst,sampler2D _ShadowTex)
 {
-    // float2 uvOffset = 1.0 / _ShadowMapResolution;
+    float CD = 0.0;
+    float2 uvOffset = 1.0 / _ShadowMapResolution;
 
-    // float d0 = Linear01Depth(tex2D(_ShadowTex, uv).r);
+    //高斯滤波
+    const float gussianKernel[9] = 
+        {
+            0.077847, 0.123317, 0.077847,
+            0.123317, 0.195346, 0.123317,
+            0.077847, 0.123317, 0.077847,
+        };
 
+    for (int x = -1; x <= 1; ++x) 
+    {
+        for (int y = -1; y <= 1; ++y) 
+        {
 
-    // const float gussianKernel[9] = 
-    //     {
-    //         0.077847, 0.123317, 0.077847,
-    //         0.123317, 0.195346, 0.123317,
-    //         0.077847, 0.123317, 0.077847,
-    //     };
+            float d = tex2D(_ShadowTex, uv + float2(x, y) * uvOffset).r;
+            d = 1.0 -d;
 
-    // float other = gussianKernel[4];
-
-    // for (int x = -1; x <= 1; ++x) 
+            float weight = gussianKernel[x * 3 + y + 4];
+            CD += weight * exp(_ESMConst * (d));
+        }
+    }
+    
+    //距离滤波
+    // float4 TexCol = 0;
+    // float v = 0;
+    // float ALLp = 0;
+    // int c = 3;  
+    // for (int x = -c; x <= c; ++x) 
     // {
-    //     for (int y = -1; y <= 1; ++y) 
+    //     for (int y = -c; y <= c; ++y) 
     //     {
-    //         if (x == 0 && y == 0)
-    //             continue;
+    //         float p = 1.0 / max(0.5,pow(length(float2(x,y)),2));
 
-    //         float d = tex2D(_ShadowTex, uv + float2(x, y) * uvOffset).r;
-    //         float weight = gussianKernel[x * 3 + y + 4];
-    //         other += weight * exp(_ESMConst * (d - d0));
+    //         v += exp(80 * (1 - tex2D(_ShadowTex,uv + float2(x,y) / 1024.0).r)) * p;
+
+    //         ALLp += p;
     //     }
     // }
+    // CD = v / ALLp;
 
-    float d0 = tex2D(_ShadowTex, uv).r;
-    d0 = exp(80 * (1.0 - tex2D(_ShadowTex, uv)));
 
-    return d0;
+    return CD;
 }
 
 float ESM(float4 WorldPos,sampler2D _ShadowMap,float4x4 _ShadowVpMatrix,float ESMConst)
@@ -239,19 +252,10 @@ float ESM(float4 WorldPos,sampler2D _ShadowMap,float4x4 _ShadowVpMatrix,float ES
 
     float ZBase = tex2D(_ShadowMap,uv.xy);
 
-    // float d = Linear01Depth(ShadowNdc.z);
-    // e^(cz) * e^(-cd)
-    // Attenuation = saturate(exp( -ESMConst * d) * Attenuation);
-
     float d =  1 - ShadowNdc.z;
 
-    float esm = saturate((exp(-80 * d) * ZBase));
-
-    // if(d > Attenuation)
-    // {
-    //     return 1.0;
-    // }
-
+    // e^(cz) * e^(-cd)
+    float esm = saturate((exp(-ESMConst * d) * ZBase));
 
     return esm ;
 }
