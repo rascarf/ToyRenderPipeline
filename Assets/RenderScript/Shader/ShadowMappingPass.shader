@@ -22,6 +22,7 @@ Shader "DeferedRP/ShadowMappingPass"
             #include "UnityLightingCommon.cginc"
             #include "Random.cginc"
 
+
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -57,10 +58,10 @@ Shader "DeferedRP/ShadowMappingPass"
 
                 float4 worldPosOffset = worldPos;
                 
-                //Shadow Bias
-                float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
-                float bias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.001);
-                if(dot(lightDir, normal) < 0.005) return 0; //光线没有计算的必要
+                // //Shadow Bias
+                // float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
+                // float bias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.001);
+                // if(dot(lightDir, normal) < 0.005) return 0; 
 
                 // 随机旋转角度
                 uint seed = RandomSeed(uv, float2(_ScreenWidth, _ScreenHeight));
@@ -68,14 +69,14 @@ Shader "DeferedRP/ShadowMappingPass"
                 float rotateAngle = rand(seed) * 2.0 * 3.1415926;
                 rotateAngle = tex2D(_NoiseTex, uv_noi*0.5).r * 2.0 * 3.1415926;
 
-                if(_UsingShadowMask)
-                {
-                    float mask = tex2D(_ShadowMask,uv).r;
+                // if(_UsingShadowMask)
+                // {
+                //     float mask = tex2D(_ShadowMask,uv).r;
 
-                    if(0.0000005>mask) return 0;
+                //     if(0.0000005>mask) return 0;
                     
-                    if(mask>0.9999995) return 1;
-                }
+                //     if(mask>0.9999995) return 1;
+                // }
 
                 //根据深度决定使用哪一级阴影
                 float Shadow = 1.0f;
@@ -86,27 +87,26 @@ Shader "DeferedRP/ShadowMappingPass"
                     {
                         worldPosOffset.xyz += normal * _ShadingPointNormalBias0;
                         // float Shadow0 = PCF3X3(worldPos,_ShadowTex0,_ShadowVpMatrix0,_ShadowMapResolution,0.001);
-                        Shadow *= ShadowMapPCSS(worldPosOffset,_ShadowTex0,_ShadowVpMatrix0,_OrthoWidth0,_OrthoDistance,_ShadowMapResolution,rotateAngle,_PcssSearchRadius0,_PcssFilterRadius0);;
-                        //  color = float3(0.2,0,0);
+                        // Shadow *= ShadowMapPCSS(worldPosOffset,_ShadowTex0,_ShadowVpMatrix0,_OrthoWidth0,_OrthoDistance,_ShadowMapResolution,rotateAngle,_PcssSearchRadius0,_PcssFilterRadius0);
+                        Shadow *= ESM(worldPosOffset,_ESM0,_ShadowVpMatrix0,_ESMConst);
+                        
                     }
                 else if(d_lin<_Split0+_Split1) 
                     {
                         worldPosOffset.xyz += normal * _ShadingPointNormalBias1;
-                        Shadow *= ShadowMapPCSS(worldPosOffset,_ShadowTex1,_ShadowVpMatrix1,_OrthoWidth1,_OrthoDistance,_ShadowMapResolution,rotateAngle,_PcssSearchRadius1,_PcssFilterRadius1);;
-                        //  color = float3(0,1.0,0);
+                        Shadow *= ESM(worldPosOffset,_ESM1,_ShadowVpMatrix1,_ESMConst);
+                        // Shadow *= ShadowMapPCSS(worldPosOffset,_ShadowTex1,_ShadowVpMatrix1,_OrthoWidth1,_OrthoDistance,_ShadowMapResolution,rotateAngle,_PcssSearchRadius1,_PcssFilterRadius1);;
                     }
                 else if(d_lin<_Split0+_Split1+_Split2) 
                     {
                         worldPosOffset.xyz += normal * _ShadingPointNormalBias2;
-                        Shadow *= ShadowMap01(worldPosOffset,_ShadowTex2,_ShadowVpMatrix2);
-                        //  color = float3(0,0,1.0);
+                        Shadow *= ESM(worldPosOffset, _ESM2, _ShadowVpMatrix2,_ESMConst);
 
                     }
                 else if(d_lin<_Split0+_Split1+_Split2+_Split3)
                     {
                         worldPosOffset.xyz += normal * _ShadingPointNormalBias3;
-                        Shadow *= ShadowMap01(worldPosOffset,_ShadowTex3,_ShadowVpMatrix3);
-                        //  color = float3(0.0,0,0);
+                        Shadow *= ESM(worldPosOffset, _ESM3, _ShadowVpMatrix3,_ESMConst);
                     }
 
                 return Shadow;

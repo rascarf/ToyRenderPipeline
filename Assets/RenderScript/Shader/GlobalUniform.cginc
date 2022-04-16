@@ -16,6 +16,11 @@ sampler2D _ShadowTex1;
 sampler2D _ShadowTex2;
 sampler2D _ShadowTex3;
 
+sampler2D _ESM0;
+sampler2D _ESM1;
+sampler2D _ESM2;
+sampler2D _ESM3;
+
 float _Split0;
 float _Split1;
 float _Split2;
@@ -62,3 +67,4 @@ float _ScreenWidth;
 float _ScreenHeight;
 float _Far;
 float _Near;
+float _ESMConst;

@@ -194,3 +194,64 @@ float ShadowMapPCSS
 
     return 1.0 - Shadow;
 }
+
+float FilterESM(float2 uv,float _ShadowMapResolution,float _ESMConst,sampler2D _ShadowTex)
+{
+    // float2 uvOffset = 1.0 / _ShadowMapResolution;
+
+    // float d0 = Linear01Depth(tex2D(_ShadowTex, uv).r);
+
+
+    // const float gussianKernel[9] = 
+    //     {
+    //         0.077847, 0.123317, 0.077847,
+    //         0.123317, 0.195346, 0.123317,
+    //         0.077847, 0.123317, 0.077847,
+    //     };
+
+    // float other = gussianKernel[4];
+
+    // for (int x = -1; x <= 1; ++x) 
+    // {
+    //     for (int y = -1; y <= 1; ++y) 
+    //     {
+    //         if (x == 0 && y == 0)
+    //             continue;
+
+    //         float d = tex2D(_ShadowTex, uv + float2(x, y) * uvOffset).r;
+    //         float weight = gussianKernel[x * 3 + y + 4];
+    //         other += weight * exp(_ESMConst * (d - d0));
+    //     }
+    // }
+
+    float d0 = tex2D(_ShadowTex, uv).r;
+    d0 = exp(80 * (1.0 - tex2D(_ShadowTex, uv)));
+
+    return d0;
+}
+
+float ESM(float4 WorldPos,sampler2D _ShadowMap,float4x4 _ShadowVpMatrix,float ESMConst)
+{
+    float4 ShadowNdc = mul(_ShadowVpMatrix,WorldPos);
+    ShadowNdc /= ShadowNdc.w;
+
+    float2 uv = ShadowNdc.xy * 0.5 + 0.5;
+
+    float ZBase = tex2D(_ShadowMap,uv.xy);
+
+    // float d = Linear01Depth(ShadowNdc.z);
+    // e^(cz) * e^(-cd)
+    // Attenuation = saturate(exp( -ESMConst * d) * Attenuation);
+
+    float d =  1 - ShadowNdc.z;
+
+    float esm = saturate((exp(-80 * d) * ZBase));
+
+    // if(d > Attenuation)
+    // {
+    //     return 1.0;
+    // }
+
+
+    return esm ;
+}

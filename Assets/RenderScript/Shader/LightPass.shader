@@ -75,6 +75,25 @@ Shader "DeferedRP/LightPass"
 
                 float3 color = float3(0.0,0.0,0.0);
 
+
+                //CSM TEST
+                // if(d_lin<_Split0) 
+                //     {
+                //          color = float3(0.2,0,0);
+                //     }
+                // else if(d_lin<_Split0+_Split1) 
+                //     {                   
+                //          color = float3(0,1.0,0);
+                //     }
+                // else if(d_lin<_Split0+_Split1+_Split2) 
+                //     {                  
+                //          color = float3(0,0,1.0);
+                //     }
+                // else if(d_lin<_Split0+_Split1+_Split2+_Split3)
+                //     {       
+                //          color = float3(0.0,0,0);
+                //     }
+
                 float ShadowStrength = tex2D(_ShadowStrength,uv); 
 
 

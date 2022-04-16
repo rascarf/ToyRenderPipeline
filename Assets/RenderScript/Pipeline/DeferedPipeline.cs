@@ -19,6 +19,8 @@ public class DeferedPipeline : RenderPipeline
     RenderTexture[] GBuffer = new RenderTexture[4];
     RenderTargetIdentifier[] GBufferID = new RenderTargetIdentifier[4];
 
+    RenderTexture[] ESMTextures = new RenderTexture[4];
+
     RenderTexture ShadowStrengthTex;
     RenderTexture ShadowMask;
 
@@ -29,8 +31,6 @@ public class DeferedPipeline : RenderPipeline
 
     public float OrthoDistance = 500.0f; //[-500,500]
 
-    RenderTexture Tex;
-    RenderTexture Tex2;
 
     public DeferedPipeline()
     {
@@ -40,8 +40,16 @@ public class DeferedPipeline : RenderPipeline
         GBuffer[2] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB64, RenderTextureReadWrite.Linear);
         GBuffer[3] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
 
-        //Texture，因为需要MRT，所以必须装起来
-        for(int i =0; i<4;i++)
+        ESMTextures[0] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
+        ESMTextures[1] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
+        ESMTextures[2] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
+        ESMTextures[3] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RFloat, RenderTextureReadWrite.Linear);
+        ESMTextures[0].filterMode = FilterMode.Bilinear;
+        ESMTextures[1].filterMode = FilterMode.Bilinear;
+        ESMTextures[2].filterMode = FilterMode.Bilinear;
+        ESMTextures[3].filterMode = FilterMode.Bilinear;
+
+        for (int i =0; i<4;i++)
         {
             GBufferID[i] = GBuffer[i];
         }
@@ -54,6 +62,7 @@ public class DeferedPipeline : RenderPipeline
         ShadowStrengthTex = new RenderTexture(Screen.width, Screen.height, 0,RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
 
         ShadowMask = new RenderTexture(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+
 
         csm = new CSM();
     }
@@ -85,10 +94,14 @@ public class DeferedPipeline : RenderPipeline
         Shader.SetGlobalFloat("_ShadowMapResolution", ShadowMapResolution);
         Shader.SetGlobalFloat("_NoiseTexResolution", BlueNoiseTex.width);
 
+        Shader.SetGlobalFloat("_ESMConst", 10.0f);
+
         for (int i = 0; i < 4; i++)
         {
             Shader.SetGlobalTexture("_GT" + i, GBuffer[i]);
         }
+
+
 
         DepthOnlyPass(context, camera);
         GBufferPass(context, camera);
@@ -129,7 +142,7 @@ public class DeferedPipeline : RenderPipeline
             context.SetupCameraProperties(Camera);
 
             cmd.SetRenderTarget(ShadowTextures[Level]);
-            cmd.ClearRenderTarget(true, true, Color.gray);
+            cmd.ClearRenderTarget(true, true, Color.blue);
 
             context.ExecuteCommandBuffer(cmd);
 
@@ -182,6 +195,18 @@ public class DeferedPipeline : RenderPipeline
         CommandBuffer cmd = new CommandBuffer();
         cmd.name = "ShadowMapPass";
 
+
+        cmd.Blit(ShadowTextures[0], ESMTextures[0], new Material(Shader.Find("DeferedRP/ESMFilter")));
+        cmd.Blit(ShadowTextures[1], ESMTextures[1], new Material(Shader.Find("DeferedRP/ESMFilter")));
+        cmd.Blit(ShadowTextures[2], ESMTextures[2], new Material(Shader.Find("DeferedRP/ESMFilter")));
+        cmd.Blit(ShadowTextures[3], ESMTextures[3], new Material(Shader.Find("DeferedRP/ESMFilter")));
+
+        for (int i = 0; i < 4; i++)
+        {
+            Shader.SetGlobalTexture("_ESM" + i, ESMTextures[i]);
+        }
+
+        /*
         RenderTexture tempTex1 = RenderTexture.GetTemporary(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
         RenderTexture tempTex2 = RenderTexture.GetTemporary(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
         RenderTexture tempTex3 = RenderTexture.GetTemporary(Screen.width, Screen.height, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
@@ -201,7 +226,11 @@ public class DeferedPipeline : RenderPipeline
 
         RenderTexture.ReleaseTemporary(tempTex1);
         RenderTexture.ReleaseTemporary(tempTex2);
-        RenderTexture.ReleaseTemporary(tempTex3);
+        RenderTexture.ReleaseTemporary(tempTex3);*/
+
+        // cmd.Blit(GBufferID[0], ESMShadowTextures, new Material(Shader.Find("DeferedRP/ESMOnlyDepth")));
+
+        cmd.Blit(GBufferID[0], ShadowStrengthTex, new Material(Shader.Find("DeferedRP/ShadowMappingPass")));
 
         context.ExecuteCommandBuffer(cmd);
         context.Submit();

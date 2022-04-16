@@ -49,19 +49,60 @@ Shader "DeferedRP/GBuffer"
                 return o;
             }
 
-            fixed4 Frag(v2f i) : SV_Target
-            {
-                float d = i.Depth.x / i.Depth.y;
-                #if defined (UNITY_REVERSED_Z)
-                    d = 1.0 - d;
-                #endif
-
-                fixed4 c = EncodeFloatRGBA(d);
-                return c;
-            }
+            void Frag(v2f i)
+            {}
 
             ENDCG
         }
+        
+        // Pass
+        // {
+        //     Tags{"LightMode" = "ESM"}
+
+        //     CGPROGRAM
+        //     #pragma vertex Vert
+        //     #pragma fragment Frag
+        //     #include "UnityCG.cginc"
+
+        //     float _ESMConst;
+
+        //     struct appdata
+        //     {
+        //         float4 vertex : POSITION;
+        //         float2 uv : TEXCOORD0;
+        //     };
+
+        //     struct v2f
+        //     {
+        //         float4 vertex : SV_POSITION;
+        //         // float2 Depth : TEXCOORD0;
+        //         float2 uv : TEXCOORD0;
+        //     };
+
+        //     v2f Vert(appdata v)
+        //     {
+        //         v2f o;
+        //         o.vertex = UnityObjectToClipPos(v.vertex);
+        //         // o.Depth = o.vertex.zw;
+        //         o.uv = v.uv;
+        //         return o;
+        //     }
+
+        //     float Frag(v2f i) : SV_Target
+        //     {
+               
+        //         // float2 uvOffset = _MainTex_TexelSize.xy;
+        //         // float d = i.vertex.z / i.vertex.w;
+
+
+        //         float e = exp( -_ESMConst * d);
+
+        //         return e;
+        //     }
+
+        //     ENDCG
+        // }
+        
 
         Pass
         {

@@ -9,7 +9,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{F5AA684F-0E9B-A976-A916-81AF4DD3BDBF}</ProjectGuid>
+    <ProjectGuid>{202A1379-17E3-A150-60A5-0F9679E22C5E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp-Editor</AssemblyName>
@@ -54,30 +54,30 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Assets\UniGLTF\DepthFirstScheduler\Editor\DepthFirstScheduler.cs" />
-    <Compile Include="Assets\UniGLTF\Core\Scripts\Editor\UniGLTFVersionMenu.cs" />
-    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\JsonFormatterTest.cs" />
-    <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\Editor\MuscleInspectorEditor.cs" />
-    <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\Editor\Tests\BvhLoaderTests.cs" />
-    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\FloatTest.cs" />
     <Compile Include="Assets\UniGLTF\UniUnlit\Editor\UniUnlitEditor.cs" />
-    <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\Editor\bvhAssetPostprocessor.cs" />
-    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\IntTest.cs" />
     <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\MapTest.cs" />
-    <Compile Include="Assets\UniGLTF\Core\Scripts\Editor\ImporterMenu.cs" />
     <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\Editor\HumanPoseTransferEditor.cs" />
-    <Compile Include="Assets\UniGLTF\Core\Scripts\Editor\gltfAssetPostprocessor.cs" />
-    <Compile Include="Assets\UniGLTF\Core\Editor\MaterialTests.cs" />
-    <Compile Include="Assets\UniGLTF\Core\Editor\UniGLTFTests.cs" />
-    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\ValidatorTests.cs" />
+    <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\Editor\BoneMappingEditor.cs" />
+    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\ArrayTest.cs" />
     <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\StringTest.cs" />
     <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\IWriteStreamTest.cs" />
     <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\BooleanTest.cs" />
-    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\SchemaTests.cs" />
-    <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\Editor\BoneMappingEditor.cs" />
-    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\ArrayTest.cs" />
     <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\JsonParserTest.cs" />
-    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\JsonDiffTests.cs" />
+    <Compile Include="Assets\UniGLTF\Core\Scripts\Editor\UniGLTFVersionMenu.cs" />
+    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\FloatTest.cs" />
+    <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\Editor\bvhAssetPostprocessor.cs" />
+    <Compile Include="Assets\UniGLTF\Core\Scripts\Editor\ImporterMenu.cs" />
+    <Compile Include="Assets\UniGLTF\Core\Editor\UniGLTFTests.cs" />
+    <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\Editor\Tests\BvhLoaderTests.cs" />
+    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\IntTest.cs" />
+    <Compile Include="Assets\UniGLTF\Core\Scripts\Editor\gltfAssetPostprocessor.cs" />
+    <Compile Include="Assets\UniGLTF\Core\Editor\MaterialTests.cs" />
+    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\SchemaTests.cs" />
+    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\JsonFormatterTest.cs" />
     <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\MsgPack\RawTest.cs" />
+    <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\Editor\MuscleInspectorEditor.cs" />
+    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\JsonDiffTests.cs" />
+    <Compile Include="Assets\UniGLTF\UniJSON\Editor\Tests\ValidatorTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -725,7 +725,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Assembly-CSharp.csproj">
-      <Project>{80C2C197-B9C3-B084-276C-D02F306B76B7}</Project>
+      <Project>{49C1A048-C122-C8FB-92A4-F97641853757}</Project>
       <Name>Assembly-CSharp</Name>
     </ProjectReference>
   </ItemGroup>

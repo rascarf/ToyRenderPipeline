@@ -211,6 +211,7 @@
     <None Include="Assets\RenderScript\Shader\Shadow.cginc" />
     <None Include="Assets\RenderScript\Shader\VerticalBlur.shader" />
     <None Include="Assets\UniGLTF\Resources\Shaders\NormalMapDecoder.shader" />
+    <None Include="Assets\RenderScript\Shader\ESMFilter.shader" />
     <None Include="Assets\RenderScript\Shader\BRDF.cginc" />
     <None Include="Assets\RenderScript\Shader\LightPass.shader" />
     <None Include="Assets\RenderScript\Shader\Random.cginc" />

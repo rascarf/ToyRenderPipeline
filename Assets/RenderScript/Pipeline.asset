@@ -19,7 +19,7 @@ MonoBehaviour:
   TestComputeShader: {fileID: 7200000, guid: 3817b1000c0fd734db4e44e61b426e9d, type: 3}
   cmsSettings:
     MaxDistance: 200
-    UsingShadowMask: 1
+    UsingShadowMask: 0
     Level0:
       ShadingPointNormalBias: 0.1
       DepthNormalBias: 0.025
