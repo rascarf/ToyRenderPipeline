@@ -12,6 +12,7 @@ public class DeferedPipeline : RenderPipeline
 
     public CSMSettings CsmSettings;
     public Texture BlueNoiseTex;
+
     public ComputeShader TestComputeShader;
 
     //GBuffers
@@ -23,6 +24,8 @@ public class DeferedPipeline : RenderPipeline
 
     RenderTexture ShadowStrengthTex;
     RenderTexture ShadowMask;
+
+    RenderTexture FrameBuffer;
 
     //PreFilter Shadow
     bool bUseESM = true;
@@ -37,18 +40,23 @@ public class DeferedPipeline : RenderPipeline
     //TAA
     TAAPass TaaPass;
     public bool bUseTaa;
+    public Matrix4x4 PreViewProj = Matrix4x4.identity;
+
+    //CS
+    RenderTexture CSRt;
+
     public DeferedPipeline()
     {
-        GDepth = new RenderTexture(Screen.width,Screen.height,24,RenderTextureFormat.Depth,RenderTextureReadWrite.Linear);
-        GBuffer[0] = new RenderTexture(Screen.width, Screen.height,0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-        GBuffer[1] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB2101010, RenderTextureReadWrite.Linear);
-        GBuffer[2] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB64, RenderTextureReadWrite.Linear);
-        GBuffer[3] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+        GDepth = new RenderTexture(1024,1024,24,RenderTextureFormat.Depth,RenderTextureReadWrite.Linear);
+        GBuffer[0] = new RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+        GBuffer[1] = new RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGB2101010, RenderTextureReadWrite.Linear);
+        GBuffer[2] = new RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGB64, RenderTextureReadWrite.Linear);
+        GBuffer[3] = new RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
 
-        FilterShadowTextures[0] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
-        FilterShadowTextures[1] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
-        FilterShadowTextures[2] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
-        FilterShadowTextures[3] = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
+        FilterShadowTextures[0] = new RenderTexture(1024, 1024, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
+        FilterShadowTextures[1] = new RenderTexture(1024, 1024, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
+        FilterShadowTextures[2] = new RenderTexture(1024, 1024, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
+        FilterShadowTextures[3] = new RenderTexture(1024, 1024, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
 
         FilterShadowTextures[0].filterMode = FilterMode.Bilinear;
         FilterShadowTextures[1].filterMode = FilterMode.Bilinear;
@@ -65,18 +73,59 @@ public class DeferedPipeline : RenderPipeline
             ShadowTextures[i] = new RenderTexture(ShadowMapResolution, ShadowMapResolution, 24,RenderTextureFormat.Depth,RenderTextureReadWrite.Linear);
         }
 
-        ShadowStrengthTex = new RenderTexture(Screen.width, Screen.height, 0,RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+        ShadowStrengthTex = new RenderTexture(1024, 1024, 0,RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
 
-        ShadowMask = new RenderTexture(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+        ShadowMask = new RenderTexture(1024 / 4, 1024 / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+
+        FrameBuffer =new  RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
 
         csm = new CSM();
         TaaPass = new TAAPass();
+
+        CSRt = new RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGBFloat);
+        CSRt.enableRandomWrite = true;
+        CSRt.Create();
+
+
     }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
+
+        var a = TestComputeShader.FindKernel("CSMain");
+        TestComputeShader.SetTexture(a, "Result", CSRt);
+        TestComputeShader.Dispatch(a, 1024 / 16, 1024 / 16, 1);
+
         Camera camera = cameras[0];
 
-        if(bUseTaa)
+       
+
+        Shader.SetGlobalTexture("_DiffuseIBL", DiffuseIBL);
+        Shader.SetGlobalTexture("_SpecularIBL", SpecularIBL);
+        Shader.SetGlobalTexture("_BrdfIBL", BrdfLut);
+        Shader.SetGlobalTexture("_GDepth", GDepth);
+        Shader.SetGlobalTexture("_NoiseTex", BlueNoiseTex);
+        Shader.SetGlobalTexture("_ShadowStrength", ShadowStrengthTex);
+        Shader.SetGlobalTexture("_ShadowMask", ShadowMask);
+
+        Shader.SetGlobalFloat("_Far", camera.farClipPlane);
+        Shader.SetGlobalFloat("_Near", camera.nearClipPlane);
+        Shader.SetGlobalFloat("_ScreenWidth", 1024);
+        Shader.SetGlobalFloat("_ScreenHeight", 1024);
+        Shader.SetGlobalFloat("_OrthoDistance", OrthoDistance);
+        Shader.SetGlobalFloat("_ShadowMapResolution", ShadowMapResolution);
+        Shader.SetGlobalFloat("_NoiseTexResolution", BlueNoiseTex.width);
+        Shader.SetGlobalFloat("_ESMConst", 80.0f);
+
+
+        for (int i = 0; i < 4; i++)
+        {
+            Shader.SetGlobalTexture("_GT" + i, GBuffer[i]);
+        }
+
+        DepthOnlyPass(context, camera);
+        MotionVectorPass(context, camera);
+
+        if (bUseTaa)
         {
             TaaPass.Camera = camera;
             TaaPass.PreCull();
@@ -90,31 +139,8 @@ public class DeferedPipeline : RenderPipeline
 
         Shader.SetGlobalMatrix("_vpMatrix", vpMatrix);
         Shader.SetGlobalMatrix("_vpMatrixInv", vpMatrixInv);
+        Shader.SetGlobalMatrix("_PrevpMatrix", PreViewProj);
 
-        Shader.SetGlobalTexture("_DiffuseIBL", DiffuseIBL);
-        Shader.SetGlobalTexture("_SpecularIBL", SpecularIBL);
-        Shader.SetGlobalTexture("_BrdfIBL", BrdfLut);
-        Shader.SetGlobalTexture("_GDepth", GDepth);
-        Shader.SetGlobalTexture("_NoiseTex", BlueNoiseTex);
-        Shader.SetGlobalTexture("_ShadowStrength", ShadowStrengthTex);
-        Shader.SetGlobalTexture("_ShadowMask", ShadowMask);
-
-        Shader.SetGlobalFloat("_Far", camera.farClipPlane);
-        Shader.SetGlobalFloat("_Near", camera.nearClipPlane);
-        Shader.SetGlobalFloat("_ScreenWidth", Screen.width);
-        Shader.SetGlobalFloat("_ScreenHeight", Screen.height);
-        Shader.SetGlobalFloat("_OrthoDistance", OrthoDistance);
-        Shader.SetGlobalFloat("_ShadowMapResolution", ShadowMapResolution);
-        Shader.SetGlobalFloat("_NoiseTexResolution", BlueNoiseTex.width);
-        Shader.SetGlobalFloat("_ESMConst", 80.0f);
-
-
-        for (int i = 0; i < 4; i++)
-        {
-            Shader.SetGlobalTexture("_GT" + i, GBuffer[i]);
-        }
-
-        DepthOnlyPass(context, camera);
         GBufferPass(context, camera);
 
         if(bUseTaa)
@@ -129,6 +155,8 @@ public class DeferedPipeline : RenderPipeline
 
             Shader.SetGlobalMatrix("_vpMatrix", vpMatrix);
             Shader.SetGlobalMatrix("_vpMatrixInv", vpMatrixInv);
+
+            PreViewProj = vpMatrix;
         }
 
         if(bUseFilterShadowMap)
@@ -147,9 +175,48 @@ public class DeferedPipeline : RenderPipeline
         if (bUseTaa)
         {
             TAAPass(context, camera);
-        }   
+        }
+
+        
     }
 
+    void MotionVectorPass(ScriptableRenderContext context, Camera Camera)
+    {
+        //在这里我们需要获得MotionVector填充
+
+        CommandBuffer cmd = new CommandBuffer();
+        cmd.name = "Motion Vector";
+
+        //绘制准备
+        context.SetupCameraProperties(Camera);
+
+        cmd.SetRenderTarget(GBuffer[2], GDepth);
+        cmd.ClearRenderTarget(true, true, Color.black);
+
+        context.ExecuteCommandBuffer(cmd);
+
+        //剔除
+        Camera.TryGetCullingParameters(out var cullingParameters);
+        var cullingResults = context.Cull(ref cullingParameters);
+
+        ShaderTagId shaderTagId = new ShaderTagId("MotionVectors");
+
+        SortingSettings sortingSettings = new SortingSettings(Camera)
+        {
+            criteria = SortingCriteria.CommonOpaque
+        };
+        
+        DrawingSettings drawingSettings = new DrawingSettings(shaderTagId, sortingSettings)
+        {
+            perObjectData = PerObjectData.MotionVectors,
+        };
+
+        FilteringSettings filteringSettings = FilteringSettings.defaultValue;
+
+        context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
+
+        context.Submit();
+    }
     void DepthOnlyPass(ScriptableRenderContext context, Camera Camera)
     {
         Light light = RenderSettings.sun;
@@ -213,7 +280,7 @@ public class DeferedPipeline : RenderPipeline
 
         //直接绑定
         cmd.SetRenderTarget(GBufferID, GDepth); // 和DX有点像
-        cmd.ClearRenderTarget(true, true, Color.blue);
+        cmd.ClearRenderTarget(false, true, Color.blue);
         context.ExecuteCommandBuffer(cmd);
 
         //剔除
@@ -276,9 +343,9 @@ public class DeferedPipeline : RenderPipeline
 
         if (!bUseESM)
         { 
-            RenderTexture tempTex1 = RenderTexture.GetTemporary(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
-            RenderTexture tempTex2 = RenderTexture.GetTemporary(Screen.width / 4, Screen.height / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
-            RenderTexture tempTex3 = RenderTexture.GetTemporary(Screen.width, Screen.height, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+            RenderTexture tempTex1 = RenderTexture.GetTemporary(1024 / 4, 1024 / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+            RenderTexture tempTex2 = RenderTexture.GetTemporary(1024 / 4, 1024 / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
+            RenderTexture tempTex3 = RenderTexture.GetTemporary(1024, 1024, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
 
             //如果需要用到Mask
             if (CsmSettings.UsingShadowMask)
@@ -308,7 +375,7 @@ public class DeferedPipeline : RenderPipeline
         Material mat = new Material(Shader.Find("DeferedRP/LightPass"));
 
         //拿到GbufferID0的内容，输出到Camera上
-        cmd.Blit(GBufferID[0],BuiltinRenderTextureType.CameraTarget,mat);
+        cmd.Blit(GBufferID[0], BuiltinRenderTextureType.CameraTarget, mat);
 
         context.ExecuteCommandBuffer(cmd);
 

@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'glstate_matrix_projection' with 'UNITY_MATRIX_P'
+
 Shader "DeferedRP/GBuffer"
 {
     Properties
@@ -62,12 +64,70 @@ Shader "DeferedRP/GBuffer"
 
             ENDCG
         }
+
+         Pass
+        {
+            Tags {"LightMode" = "MotionVectors"}
+
+            CGPROGRAM
+            #pragma vertex Vert
+            #pragma fragment Frag
+            #pragma enable_d3d11_debug_symbols
+            #include "UnityCG.cginc"
+            
+            struct Attribute
+            {
+                float4 position :POSITION;
+            };
+
+            struct v2f
+            {
+                float4 positionCS : SV_POSITION;
+                float4 transformPos : TEXCOORD1;
+                float4 transformPosOld : TEXCOORD2;
+            };
+
+            float4x4 unity_MotionVectorsParams;
+            float4x4 unity_MatrixPreviousM;
+            float4x4 _vpMatrix;
+            float4x4 _PrevpMatrix;
+
+            v2f Vert(Attribute v)
+            {
+                v2f o;
+                o.positionCS = UnityObjectToClipPos(v.position);
+                // o.positionCS.z -= 0.01 * o.positionCS.w;
+                o.transformPos = mul(_vpMatrix,mul(unity_ObjectToWorld,float4(v.position.xyz,1.0)));
+                o.transformPosOld = mul(_PrevpMatrix, mul(unity_MatrixPreviousM, float4(v.position.xyz, 1.0)));
+
+                return o;
+            }
+
+            float4 Frag(v2f i):SV_Target
+            {
+                
+                float3 hPos = (i.transformPos.xyz / i.transformPos.w);
+                float3 hPosOld = (i.transformPosOld.xyz / i.transformPosOld.w);
+                float2 motionVector = hPos - hPosOld;
+
+                #if UNITY_UV_STARTS_AT_TOP
+                    motionVector.y = - motionVector.y;
+                #endif
+                // 表示强制更新，不使用历史信息 
+
+                // if (unity_MotionVectorsParams.y == 0) return float4(1, 0, 0, 0);
+
+                return float4(motionVector.xy * 0.5,0.0,0.0);
+            }
+
+            ENDCG
+        }
         
         Pass
         {
             Tags { "LightMode" = "GBuffer" }
             CGPROGRAM
-
+            #pragma enable_d3d11_debug_symbols
             #pragma vertex vert
             #pragma fragment frag
             #include "UnityCG.cginc"
@@ -97,6 +157,10 @@ Shader "DeferedRP/GBuffer"
             float _Metallic_global;
             float _Roughness_global;
   
+            float4x4 _PrevpMatrix; // 前一帧的矩阵（无Jitter）
+            float4x4 _vpMatrixInv; // 当前帧的逆矩阵（有Jitter)
+            float _ScreenWidth;
+            float _ScreenHeight;
 
             v2f vert(appdata v)
             {
@@ -122,6 +186,15 @@ Shader "DeferedRP/GBuffer"
                 float roughness = _Roughness_global;
                 float ao = tex2D(_OcclusionMap,i.uv).g;
 
+                // float4 NDCPos = float4(i.vertex.xy / float2(_ScreenWidth,_ScreenHeight),i.vertex.z,1.0);
+                // float4 WorldPos = mul(_vpMatrixInv , NDCPos);
+                // WorldPos = WorldPos / WorldPos.w;
+
+                // float4 PreNdc = mul(_PrevpMatrix , WorldPos);
+                // PreNdc /= PreNdc.w; // 得到PrevNDC下的点
+
+                // float2 MotionVec = (NDCPos.xy - PreNdc.xy) * 0.5;
+
                 if(_Use_Metal_Map)
                 {
                     float4 metal = tex2D(_MetallicGlossMap, i.uv);
@@ -134,9 +207,10 @@ Shader "DeferedRP/GBuffer"
                     normal = tex2D(_BumpMap,i.uv).rgb;
                 }*/
 
+
                 GT0 = col;
                 GT1 = float4(normal*0.5+0.5, 0);
-                GT2 = float4(0, 0, roughness,metallic);
+                GT2 = float4(0,0, roughness,metallic);
                 GT3 = float4(Emission, ao);
             }
 

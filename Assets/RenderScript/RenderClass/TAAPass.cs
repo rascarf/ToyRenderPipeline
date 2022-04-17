@@ -51,23 +51,26 @@ public class TAAPass
     public void OnRender(BuiltinRenderTextureType Source, BuiltinRenderTextureType Dest, ScriptableRenderContext context)
     {
         var HistoryRead = m_HistoryTextures[FrameIndex % 2];
-        if(HistoryRead == null || HistoryRead.width != Screen.width || HistoryRead.height != Screen.height)
+        if(HistoryRead == null || HistoryRead.width != 1024 || HistoryRead.height != 1024)
         {
             if(HistoryRead != null) HistoryRead.Release();
 
-            HistoryRead = RenderTexture.GetTemporary(Screen.width, Screen.height, 0, RenderTextureFormat.ARGBFloat,RenderTextureReadWrite.Linear);
+            HistoryRead = RenderTexture.GetTemporary(1024, 1024, 0, RenderTextureFormat.ARGBFloat,RenderTextureReadWrite.Linear);
+            HistoryRead.name = "HistoryRead";
             m_HistoryTextures[FrameIndex % 2] = HistoryRead;
             m_ResetHistory = true;
         }
 
         var HistoryWrite = m_HistoryTextures[(FrameIndex + 1) % 2];
-        if(HistoryWrite == null || HistoryWrite.width != Screen.width || HistoryWrite.height != Screen.height)
+        if(HistoryWrite == null || HistoryWrite.width != 1024 || HistoryWrite.height != 1024)
         {
             if (HistoryWrite != null) HistoryWrite.Release();
 
-            HistoryWrite = RenderTexture.GetTemporary(Screen.width, Screen.height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+            HistoryWrite = RenderTexture.GetTemporary(1024, 1024, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+            HistoryWrite.name = "HistoryWrite";
             m_HistoryTextures[(FrameIndex+1) % 2] = HistoryWrite;
             m_ResetHistory = true;
+            
         }
 
         CommandBuffer cmd = new CommandBuffer();

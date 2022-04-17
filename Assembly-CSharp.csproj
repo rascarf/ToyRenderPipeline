@@ -123,6 +123,7 @@
     <Compile Include="Assets\UniGLTF\UniJSON\Scripts\Json\JsonSchemaAttribute.cs" />
     <Compile Include="Assets\UniGLTF\DepthFirstScheduler\Scheduler\ThreadPoolScheduler.cs" />
     <Compile Include="Assets\UniGLTF\Core\Scripts\PreExportShaderProps\Unlit_Transparent.cs" />
+    <Compile Include="Assets\RenderScript\RenderClass\TAAPass.cs" />
     <Compile Include="Assets\UniGLTF\UniHumanoid\Scripts\HumanPoseClip.cs" />
     <Compile Include="Assets\UniGLTF\Core\Scripts\IO\UnityPath.cs" />
     <Compile Include="Assets\UniGLTF\Core\Scripts\IO\ShaderStore.cs" />
@@ -206,7 +207,7 @@
     <Compile Include="Assets\UniGLTF\Core\Scripts\UniGLTFVersion_partial.cs" />
     <Compile Include="Assets\UniGLTF\UniHumanoid\PoseModifier\IPoseModifier.cs" />
     <Compile Include="Assets\UniGLTF\UniJSON\Scripts\JsonSchemaValidator\JsonArrayValidator.cs" />
-    <Compile Include="Assets\RenderScript\RenderClass\TAAPass.cs" />
+    <Compile Include="Assets\DisablePass.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\RenderScript\Shader\Shadow.cginc" />
@@ -837,6 +838,15 @@
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.Core.ShaderLibrary">
+      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.ShaderLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.Core.Runtime">
+      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.Core.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
