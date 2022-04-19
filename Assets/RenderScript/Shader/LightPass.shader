@@ -40,7 +40,6 @@ Shader "DeferedRP/LightPass"
                 v2f o;
                 o.uv = v.uv;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv;
                 return o;
             }
 
@@ -64,7 +63,9 @@ Shader "DeferedRP/LightPass"
                 //还原屏幕上每个点的位置信息，根据MatrixVPInv计算得到
                 float d = UNITY_SAMPLE_DEPTH(tex2D(_GDepth, uv));
                 float d_lin = Linear01Depth(d);
+
                 DepthOut = d;
+
                 float4 ndcPos = float4(uv*2-1, d, 1);
                 float4 worldPos = mul(_vpMatrixInv, ndcPos);
                 worldPos /= worldPos.w;

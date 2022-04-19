@@ -142,7 +142,7 @@ Shader "DeferedRP/GBuffer"
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
                 float3 normal : NORMAL;
-                float4 Test : TEXCOORD1;
+                // float4 Test : TEXCOORD1;
             };
 
             sampler2D _MainTex;
@@ -160,7 +160,7 @@ Shader "DeferedRP/GBuffer"
             float _Roughness_global;
 
   
-            float4x4 _PrevpMatrix; // 前一帧的矩阵（无Jitter）
+            // float4x4 _PrevpMatrix; // 前一帧的矩阵（无Jitter）
             float4x4 _vpMatrixInv; // 当前帧的逆矩阵（有Jitter)
 
             float4x4 _vpMatrix; //当前VP矩阵
@@ -172,7 +172,7 @@ Shader "DeferedRP/GBuffer"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.Test = mul(_vpMatrix,mul(unity_ObjectToWorld,float4(v.vertex)));
+                // o.Test = mul(_vpMatrix,mul(unity_ObjectToWorld,float4(v.vertex)));
                 o.uv = v.uv;
                 o.normal = UnityObjectToWorldNormal(v.normal);
                 return o;

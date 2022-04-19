@@ -83,6 +83,7 @@ public class DeferedPipeline : RenderPipeline
 
 
         csm = new CSM();
+
         TaaPass = new TAAPass();
 
         TaaBuffer = new RenderTexture(1024, 1024, 24, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
@@ -132,8 +133,7 @@ public class DeferedPipeline : RenderPipeline
 
         if (bUseTaa)
         {
-            TaaPass.Camera = camera;
-            TaaPass.PreCull();
+            TaaPass.PreCull(context,ref camera);
         }
 
         viewMatrix = camera.worldToCameraMatrix;
@@ -144,22 +144,8 @@ public class DeferedPipeline : RenderPipeline
 
         Shader.SetGlobalMatrix("_vpMatrix", vpMatrix); // 有Jitter
         Shader.SetGlobalMatrix("_vpMatrixInv", vpMatrixInv); // 有Jitter
-        Shader.SetGlobalMatrix("_PrevpMatrix", PreViewProj); //无Jitter
 
         GBufferPass(context, camera);
-
-        if (bUseTaa)
-        {
-            TaaPass.OnPostRender();
-
-            viewMatrix = camera.worldToCameraMatrix;
-            projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
-
-            vpMatrix = projMatrix * viewMatrix;
-            PreViewProj = vpMatrix;
-
-            Shader.SetGlobalMatrix("_PrevpMatrix", PreViewProj); //无Jitter
-        }
 
         if (bUseFilterShadowMap)
         {
@@ -176,6 +162,14 @@ public class DeferedPipeline : RenderPipeline
 
         if (bUseTaa)
         {
+            TaaPass.OnPostRender(context, ref camera);
+
+            viewMatrix = camera.worldToCameraMatrix;
+            projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
+            vpMatrix = projMatrix * viewMatrix;
+
+            PreViewProj = vpMatrix;
+
             TAAPass(context, camera);
         }
 
@@ -386,8 +380,10 @@ public class DeferedPipeline : RenderPipeline
 
         Material mat = new Material(Shader.Find("DeferedRP/LightPass"));
 
-        //拿到GbufferID0的内容，输出到Camera上
         cmd.Blit(GBufferID[0], TaaBuffer, mat);
+
+        if(!bUseTaa)
+        cmd.Blit(TaaBuffer, BuiltinRenderTextureType.CameraTarget);
 
         context.ExecuteCommandBuffer(cmd);
 
@@ -407,8 +403,7 @@ public class DeferedPipeline : RenderPipeline
     void TAAPass(ScriptableRenderContext context,Camera Camera)
     {
        // Shader.SetGlobalTexture("_OnlyTAA", TaaBuffer);
-
-        TaaPass.OnRender(ref TaaBuffer, BuiltinRenderTextureType.CameraTarget, context);         
+        TaaPass.OnRender(ref TaaBuffer, BuiltinRenderTextureType.CameraTarget, context);       
     }
 
 }

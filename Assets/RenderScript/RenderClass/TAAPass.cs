@@ -6,8 +6,6 @@ using UnityEditor;
 
 public class TAAPass
 {
-    public Camera Camera;
-
     private RenderTexture[] m_HistoryTextures = new RenderTexture[2];
 
     private Vector2[] HaltonSequence = new Vector2[]
@@ -28,27 +26,31 @@ public class TAAPass
 
     private Vector2 _Jitter;
 
+    public Matrix4x4 OriginalVPMatrix;
+    public Matrix4x4 JitterVPMatrix;
 
-    public void PreCull()
+    public void PreCull(ScriptableRenderContext context, ref Camera camera)
     {
-        var Proj = Camera.projectionMatrix;
+        CommandBuffer cmd = new CommandBuffer();
 
-        Camera.nonJitteredProjectionMatrix = Proj;
+        OriginalVPMatrix = camera.projectionMatrix;
+        JitterVPMatrix = OriginalVPMatrix;
+
+        camera.nonJitteredProjectionMatrix = OriginalVPMatrix;
 
         FrameIndex++;
 
         var Index = FrameIndex % 8;
 
         _Jitter = new Vector2(
-                    (HaltonSequence[Index].x - 0.5f) / Camera.pixelWidth,
-                    (HaltonSequence[Index].y - 0.5f) / Camera.pixelHeight
-                );
+                    (HaltonSequence[Index].x - 0.5f) / 1024.0f * 2,
+                    (HaltonSequence[Index].y - 0.5f) / 1024.0f * 2
+                ); // 直接算uv下的偏移值
 
-        Proj.m02 += _Jitter.x * 2;
-        Proj.m12 += _Jitter.y * 2;
+        JitterVPMatrix.m02 += _Jitter.x;
+        JitterVPMatrix.m12 += _Jitter.y;
 
-        Camera.projectionMatrix = Proj;
-
+        camera.projectionMatrix = JitterVPMatrix;
     }
     public void OnRender(ref RenderTexture Source, BuiltinRenderTextureType Dest, ScriptableRenderContext context)
     {
@@ -98,9 +100,13 @@ public class TAAPass
         context.Submit();
     }
 
-    public void OnPostRender()
+    public void OnPostRender(ScriptableRenderContext context,ref Camera camera)
     {
-        Camera.ResetProjectionMatrix();
+        CommandBuffer cmd = new CommandBuffer();    
+        context.ExecuteCommandBuffer(cmd);
+        context.Submit();
+
+        camera.projectionMatrix = OriginalVPMatrix;
     }
 
 
