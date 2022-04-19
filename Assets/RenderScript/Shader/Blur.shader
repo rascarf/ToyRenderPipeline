@@ -19,8 +19,9 @@ Shader "DeferedRP/Blur" //对采样出来的阴影图滤波
 
             #include "GlobalUniform.cginc"
             #include "UnityCG.cginc"
-            #include "Shadow.cginc"
             #include "Random.cginc"
+            #include "Shadow.cginc"
+
 
             struct appdata
             {

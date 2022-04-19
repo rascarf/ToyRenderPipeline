@@ -19,8 +19,9 @@ Shader "DeferedRP/VerticalBlur"
             
             #include "GlobalUniform.cginc"
             #include "UnityCG.cginc"
-            #include "Shadow.cginc"
             #include "Random.cginc"
+            #include "Shadow.cginc"
+
 
             struct appdata
             {

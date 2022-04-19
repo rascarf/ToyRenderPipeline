@@ -87,25 +87,24 @@ Shader "DeferedRP/GBuffer"
                 float4 transformPosOld : TEXCOORD2;
             };
 
-            float4x4 unity_MotionVectorsParams;
-            float4x4 unity_MatrixPreviousM;
-            float4x4 _vpMatrix;
-            float4x4 _PrevpMatrix;
+            float4 unity_MotionVectorsParams;
+            float4x4 unity_MatrixPreviousM; //上一帧Model矩阵
+
+            float4x4 _vpMatrix; //当前VP矩阵
+            float4x4 _PrevpMatrix; //上一帧VP矩阵
 
             v2f Vert(Attribute v)
             {
                 v2f o;
                 o.positionCS = UnityObjectToClipPos(v.position);
-                // o.positionCS.z -= 0.01 * o.positionCS.w;
-                o.transformPos = mul(_vpMatrix,mul(unity_ObjectToWorld,float4(v.position.xyz,1.0)));
-                o.transformPosOld = mul(_PrevpMatrix, mul(unity_MatrixPreviousM, float4(v.position.xyz, 1.0)));
+                o.transformPos = mul(_vpMatrix,mul(unity_ObjectToWorld,v.position));
+                o.transformPosOld = mul(_PrevpMatrix, mul(unity_MatrixPreviousM, v.position));
 
                 return o;
             }
 
             float4 Frag(v2f i):SV_Target
-            {
-                
+            {         
                 float3 hPos = (i.transformPos.xyz / i.transformPos.w);
                 float3 hPosOld = (i.transformPosOld.xyz / i.transformPosOld.w);
                 float2 motionVector = hPos - hPosOld;
@@ -115,8 +114,7 @@ Shader "DeferedRP/GBuffer"
                 #endif
                 // 表示强制更新，不使用历史信息 
 
-                // if (unity_MotionVectorsParams.y == 0) return float4(1, 0, 0, 0);
-
+                if(unity_MotionVectorsParams.y == 0) return float4(0,0,0,0);
                 return float4(motionVector.xy * 0.5,0.0,0.0);
             }
 
@@ -144,6 +142,7 @@ Shader "DeferedRP/GBuffer"
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
                 float3 normal : NORMAL;
+                float4 Test : TEXCOORD1;
             };
 
             sampler2D _MainTex;
@@ -151,14 +150,21 @@ Shader "DeferedRP/GBuffer"
             sampler2D _EmissionMap;
             sampler2D _OcclusionMap;
             sampler2D _BumpMap;
+            sampler2D _MotionVector;
 
+
+            
             float _Use_Metal_Map;
             float _Use_Normal_Map;
             float _Metallic_global;
             float _Roughness_global;
+
   
             float4x4 _PrevpMatrix; // 前一帧的矩阵（无Jitter）
             float4x4 _vpMatrixInv; // 当前帧的逆矩阵（有Jitter)
+
+            float4x4 _vpMatrix; //当前VP矩阵
+
             float _ScreenWidth;
             float _ScreenHeight;
 
@@ -166,6 +172,7 @@ Shader "DeferedRP/GBuffer"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
+                o.Test = mul(_vpMatrix,mul(unity_ObjectToWorld,float4(v.vertex)));
                 o.uv = v.uv;
                 o.normal = UnityObjectToWorldNormal(v.normal);
                 return o;
@@ -210,7 +217,7 @@ Shader "DeferedRP/GBuffer"
 
                 GT0 = col;
                 GT1 = float4(normal*0.5+0.5, 0);
-                GT2 = float4(0,0, roughness,metallic);
+                GT2 = float4(tex2D(_MotionVector,i.uv).xy, roughness,metallic);
                 GT3 = float4(Emission, ao);
             }
 

@@ -16,7 +16,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses:
-  - MOTIONVECTORS
+  - MotionVectors
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:

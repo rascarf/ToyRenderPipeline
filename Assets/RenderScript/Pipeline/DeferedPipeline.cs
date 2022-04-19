@@ -15,6 +15,8 @@ public class DeferedPipeline : RenderPipeline
 
     public ComputeShader TestComputeShader;
 
+    RenderTexture MotionVectorRT;
+
     //GBuffers
     RenderTexture GDepth;
     RenderTexture[] GBuffer = new RenderTexture[4];
@@ -24,8 +26,6 @@ public class DeferedPipeline : RenderPipeline
 
     RenderTexture ShadowStrengthTex;
     RenderTexture ShadowMask;
-
-    RenderTexture FrameBuffer;
 
     //PreFilter Shadow
     bool bUseESM = true;
@@ -41,6 +41,8 @@ public class DeferedPipeline : RenderPipeline
     TAAPass TaaPass;
     public bool bUseTaa;
     public Matrix4x4 PreViewProj = Matrix4x4.identity;
+    public Matrix4x4 PreModelProj = Matrix4x4.identity;
+    RenderTexture TaaBuffer;
 
     //CS
     RenderTexture CSRt;
@@ -77,27 +79,21 @@ public class DeferedPipeline : RenderPipeline
 
         ShadowMask = new RenderTexture(1024 / 4, 1024 / 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
 
-        FrameBuffer =new  RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+        MotionVectorRT = new RenderTexture(1024, 1024, 0, RenderTextureFormat.RGFloat, RenderTextureReadWrite.Linear);
+
 
         csm = new CSM();
         TaaPass = new TAAPass();
 
+        TaaBuffer = new RenderTexture(1024, 1024, 24, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+
         CSRt = new RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGBFloat);
         CSRt.enableRandomWrite = true;
         CSRt.Create();
-
-
     }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
-
-        var a = TestComputeShader.FindKernel("CSMain");
-        TestComputeShader.SetTexture(a, "Result", CSRt);
-        TestComputeShader.Dispatch(a, 1024 / 16, 1024 / 16, 1);
-
         Camera camera = cameras[0];
-
-       
 
         Shader.SetGlobalTexture("_DiffuseIBL", DiffuseIBL);
         Shader.SetGlobalTexture("_SpecularIBL", SpecularIBL);
@@ -106,6 +102,7 @@ public class DeferedPipeline : RenderPipeline
         Shader.SetGlobalTexture("_NoiseTex", BlueNoiseTex);
         Shader.SetGlobalTexture("_ShadowStrength", ShadowStrengthTex);
         Shader.SetGlobalTexture("_ShadowMask", ShadowMask);
+        Shader.SetGlobalTexture("_MotionVector", MotionVectorRT);
 
         Shader.SetGlobalFloat("_Far", camera.farClipPlane);
         Shader.SetGlobalFloat("_Near", camera.nearClipPlane);
@@ -116,11 +113,19 @@ public class DeferedPipeline : RenderPipeline
         Shader.SetGlobalFloat("_NoiseTexResolution", BlueNoiseTex.width);
         Shader.SetGlobalFloat("_ESMConst", 80.0f);
 
-
         for (int i = 0; i < 4; i++)
         {
             Shader.SetGlobalTexture("_GT" + i, GBuffer[i]);
         }
+
+        Matrix4x4 viewMatrix = camera.worldToCameraMatrix;
+        Matrix4x4 projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
+
+        Matrix4x4 vpMatrix = projMatrix * viewMatrix;
+        Matrix4x4 vpMatrixInv = vpMatrix.inverse;
+
+        Shader.SetGlobalMatrix("_vpMatrix", vpMatrix); // 无Jitter
+        Shader.SetGlobalMatrix("_PrevpMatrix", PreViewProj); // 无Jitter
 
         DepthOnlyPass(context, camera);
         MotionVectorPass(context, camera);
@@ -131,35 +136,32 @@ public class DeferedPipeline : RenderPipeline
             TaaPass.PreCull();
         }
 
-        Matrix4x4 viewMatrix = camera.worldToCameraMatrix;
-        Matrix4x4 projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
+        viewMatrix = camera.worldToCameraMatrix;
+        projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
 
-        Matrix4x4 vpMatrix = projMatrix * viewMatrix;
-        Matrix4x4 vpMatrixInv = vpMatrix.inverse;
+        vpMatrix = projMatrix * viewMatrix;
+        vpMatrixInv = vpMatrix.inverse;
 
-        Shader.SetGlobalMatrix("_vpMatrix", vpMatrix);
-        Shader.SetGlobalMatrix("_vpMatrixInv", vpMatrixInv);
-        Shader.SetGlobalMatrix("_PrevpMatrix", PreViewProj);
+        Shader.SetGlobalMatrix("_vpMatrix", vpMatrix); // 有Jitter
+        Shader.SetGlobalMatrix("_vpMatrixInv", vpMatrixInv); // 有Jitter
+        Shader.SetGlobalMatrix("_PrevpMatrix", PreViewProj); //无Jitter
 
         GBufferPass(context, camera);
 
-        if(bUseTaa)
+        if (bUseTaa)
         {
             TaaPass.OnPostRender();
 
-             viewMatrix = camera.worldToCameraMatrix;
-             projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
+            viewMatrix = camera.worldToCameraMatrix;
+            projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
 
-             vpMatrix = projMatrix * viewMatrix;
-             vpMatrixInv = vpMatrix.inverse;
-
-            Shader.SetGlobalMatrix("_vpMatrix", vpMatrix);
-            Shader.SetGlobalMatrix("_vpMatrixInv", vpMatrixInv);
-
+            vpMatrix = projMatrix * viewMatrix;
             PreViewProj = vpMatrix;
+
+            Shader.SetGlobalMatrix("_PrevpMatrix", PreViewProj); //无Jitter
         }
 
-        if(bUseFilterShadowMap)
+        if (bUseFilterShadowMap)
         {
             FilterShadowMap(context, camera);
         }
@@ -167,7 +169,7 @@ public class DeferedPipeline : RenderPipeline
         {
             ShadowMappingPass(context, camera);
         }
-    
+
         LightPass(context, camera);
 
         SkyDomePass(context, camera);
@@ -177,7 +179,16 @@ public class DeferedPipeline : RenderPipeline
             TAAPass(context, camera);
         }
 
-        
+        ComputePass();
+
+        //SkyDomePass(context, camera);
+    }
+
+     void ComputePass()
+    {
+        var a = TestComputeShader.FindKernel("CSMain");
+        TestComputeShader.SetTexture(a, "Result", CSRt);
+        TestComputeShader.Dispatch(a, 1024 / 16, 1024 / 16, 1);
     }
 
     void MotionVectorPass(ScriptableRenderContext context, Camera Camera)
@@ -190,12 +201,13 @@ public class DeferedPipeline : RenderPipeline
         //绘制准备
         context.SetupCameraProperties(Camera);
 
-        cmd.SetRenderTarget(GBuffer[2], GDepth);
+        cmd.SetRenderTarget(MotionVectorRT, GDepth);
         cmd.ClearRenderTarget(true, true, Color.black);
 
         context.ExecuteCommandBuffer(cmd);
 
         //剔除
+        Camera.depthTextureMode |= DepthTextureMode.MotionVectors | DepthTextureMode.Depth;
         Camera.TryGetCullingParameters(out var cullingParameters);
         var cullingResults = context.Cull(ref cullingParameters);
 
@@ -213,7 +225,7 @@ public class DeferedPipeline : RenderPipeline
 
         FilteringSettings filteringSettings = FilteringSettings.defaultValue;
 
-        context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
+        context.DrawRenderers( cullingResults, ref drawingSettings, ref filteringSettings);
 
         context.Submit();
     }
@@ -375,7 +387,7 @@ public class DeferedPipeline : RenderPipeline
         Material mat = new Material(Shader.Find("DeferedRP/LightPass"));
 
         //拿到GbufferID0的内容，输出到Camera上
-        cmd.Blit(GBufferID[0], BuiltinRenderTextureType.CameraTarget, mat);
+        cmd.Blit(GBufferID[0], TaaBuffer, mat);
 
         context.ExecuteCommandBuffer(cmd);
 
@@ -394,7 +406,9 @@ public class DeferedPipeline : RenderPipeline
     }
     void TAAPass(ScriptableRenderContext context,Camera Camera)
     {
-        TaaPass.OnRender(BuiltinRenderTextureType.CameraTarget, BuiltinRenderTextureType.CameraTarget, context);
+       // Shader.SetGlobalTexture("_OnlyTAA", TaaBuffer);
+
+        TaaPass.OnRender(ref TaaBuffer, BuiltinRenderTextureType.CameraTarget, context);         
     }
 
 }

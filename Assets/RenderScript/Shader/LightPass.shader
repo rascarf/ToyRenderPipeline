@@ -17,9 +17,10 @@ Shader "DeferedRP/LightPass"
             #include "UnityCG.cginc"
             #include "UnityLightingCommon.cginc"
             #include "BRDF.cginc"
-            #include "Shadow.cginc"
             #include "Random.cginc"
             #include "GlobalUniform.cginc"
+            #include "Shadow.cginc"
+
 
 
             struct appdata
@@ -111,6 +112,10 @@ Shader "DeferedRP/LightPass"
                 // {
                 //     return float4(1.0,0,0,0);
                 // }
+
+                // #if UNITY_UV_STARTS_AT_TOP
+                //     return float4(0.0,0.0,0.0,1.0);
+                // #endif
 
                 return float4(color, 1);
             }

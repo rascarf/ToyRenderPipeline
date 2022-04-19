@@ -28,6 +28,7 @@ public class TAAPass
 
     private Vector2 _Jitter;
 
+
     public void PreCull()
     {
         var Proj = Camera.projectionMatrix;
@@ -39,16 +40,17 @@ public class TAAPass
         var Index = FrameIndex % 8;
 
         _Jitter = new Vector2(
-                (HaltonSequence[Index].x - 0.5f) / Camera.pixelWidth,
-                (HaltonSequence[Index].y - 0.5f) / Camera.pixelHeight);
+                    (HaltonSequence[Index].x - 0.5f) / Camera.pixelWidth,
+                    (HaltonSequence[Index].y - 0.5f) / Camera.pixelHeight
+                );
 
-    Proj.m02 += _Jitter.x * 2;
-    Proj.m12 += _Jitter.y * 2;
+        Proj.m02 += _Jitter.x * 2;
+        Proj.m12 += _Jitter.y * 2;
 
-    Camera.projectionMatrix = Proj;
+        Camera.projectionMatrix = Proj;
 
     }
-    public void OnRender(BuiltinRenderTextureType Source, BuiltinRenderTextureType Dest, ScriptableRenderContext context)
+    public void OnRender(ref RenderTexture Source, BuiltinRenderTextureType Dest, ScriptableRenderContext context)
     {
         var HistoryRead = m_HistoryTextures[FrameIndex % 2];
         if(HistoryRead == null || HistoryRead.width != 1024 || HistoryRead.height != 1024)
@@ -58,6 +60,7 @@ public class TAAPass
             HistoryRead = RenderTexture.GetTemporary(1024, 1024, 0, RenderTextureFormat.ARGBFloat,RenderTextureReadWrite.Linear);
             HistoryRead.name = "HistoryRead";
             m_HistoryTextures[FrameIndex % 2] = HistoryRead;
+            HistoryRead.filterMode = FilterMode.Bilinear;
             m_ResetHistory = true;
         }
 
@@ -67,6 +70,7 @@ public class TAAPass
             if (HistoryWrite != null) HistoryWrite.Release();
 
             HistoryWrite = RenderTexture.GetTemporary(1024, 1024, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+            HistoryWrite.filterMode = FilterMode.Bilinear;
             HistoryWrite.name = "HistoryWrite";
             m_HistoryTextures[(FrameIndex+1) % 2] = HistoryWrite;
             m_ResetHistory = true;
@@ -78,6 +82,7 @@ public class TAAPass
 
         Shader.SetGlobalVector("_Jitter", _Jitter);
         Shader.SetGlobalTexture("_HistoryTex", HistoryRead);
+        Shader.SetGlobalTexture("_OnlyTAA", Source);
         Shader.SetGlobalInt("_IgnoreHistory", m_ResetHistory ? 1 : 0);
 
         Material TaaMaterial = new Material(Shader.Find("DeferedRP/TAA"));
