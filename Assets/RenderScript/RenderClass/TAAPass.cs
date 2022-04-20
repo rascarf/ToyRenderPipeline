@@ -84,7 +84,7 @@ public class TAAPass
 
         Shader.SetGlobalVector("_Jitter", _Jitter);
         Shader.SetGlobalTexture("_HistoryTex", HistoryRead);
-        Shader.SetGlobalTexture("_OnlyTAA", Source);
+        Shader.SetGlobalTexture("_LightOut", Source);
         Shader.SetGlobalInt("_IgnoreHistory", m_ResetHistory ? 1 : 0);
 
         Material TaaMaterial = new Material(Shader.Find("DeferedRP/TAA"));

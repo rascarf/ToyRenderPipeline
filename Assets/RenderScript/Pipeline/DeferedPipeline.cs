@@ -42,7 +42,7 @@ public class DeferedPipeline : RenderPipeline
     public bool bUseTaa;
     public Matrix4x4 PreViewProj = Matrix4x4.identity;
     public Matrix4x4 PreModelProj = Matrix4x4.identity;
-    RenderTexture TaaBuffer;
+    RenderTexture LightOut;
 
     //CS
     RenderTexture CSRt;
@@ -86,7 +86,8 @@ public class DeferedPipeline : RenderPipeline
 
         TaaPass = new TAAPass();
 
-        TaaBuffer = new RenderTexture(1024, 1024, 24, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+        LightOut = new RenderTexture(1024, 1024, 24, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+        LightOut.enableRandomWrite = true;
 
         CSRt = new RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGBFloat);
         CSRt.enableRandomWrite = true;
@@ -174,15 +175,14 @@ public class DeferedPipeline : RenderPipeline
         }
 
         ComputePass();
-
-        //SkyDomePass(context, camera);
     }
 
      void ComputePass()
     {
         var a = TestComputeShader.FindKernel("CSMain");
         TestComputeShader.SetTexture(a, "Result", CSRt);
-        TestComputeShader.Dispatch(a, 1024 / 16, 1024 / 16, 1);
+        TestComputeShader.SetTexture(a, "LightOut", LightOut);
+        TestComputeShader.Dispatch(a, 1024 / 32, 1024 / 32, 1);
     }
 
     void MotionVectorPass(ScriptableRenderContext context, Camera Camera)
@@ -379,12 +379,15 @@ public class DeferedPipeline : RenderPipeline
         cmd.name = "LightPass";
 
         Material mat = new Material(Shader.Find("DeferedRP/LightPass"));
-
-        cmd.Blit(GBufferID[0], TaaBuffer, mat);
-
-        if(!bUseTaa)
-        cmd.Blit(TaaBuffer, BuiltinRenderTextureType.CameraTarget);
-
+        if (bUseTaa)
+        {
+            cmd.Blit(GBufferID[0], LightOut, mat);
+        }
+        else
+        {
+            cmd.Blit(GBufferID[0], BuiltinRenderTextureType.CameraTarget, mat);
+        }
+           
         context.ExecuteCommandBuffer(cmd);
 
         context.Submit();
@@ -402,8 +405,7 @@ public class DeferedPipeline : RenderPipeline
     }
     void TAAPass(ScriptableRenderContext context,Camera Camera)
     {
-       // Shader.SetGlobalTexture("_OnlyTAA", TaaBuffer);
-        TaaPass.OnRender(ref TaaBuffer, BuiltinRenderTextureType.CameraTarget, context);       
+        TaaPass.OnRender(ref LightOut, BuiltinRenderTextureType.CameraTarget, context);       
     }
 
 }

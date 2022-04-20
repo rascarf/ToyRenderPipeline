@@ -40,7 +40,7 @@ Shader "DeferedRP/TAA"
 
             sampler2D _HistoryTex; 
             sampler2D _GT2;
-            sampler2D _OnlyTAA;
+            sampler2D _LightOut;
             sampler2D _GDepth;
             int _IgnoreHistory;
             float2 _Jitter;
@@ -135,7 +135,7 @@ Shader "DeferedRP/TAA"
                 float2 step = 1 / 1024.0;
                 float2 uv = i.uv;
                 float2 UnJitterUV =  i.uv - _Jitter; //这是Jitter的
-                float4 Color = tex2D(_OnlyTAA,uv); //Jitter过的颜色
+                float4 Color = tex2D(_LightOut,uv); //Jitter过的颜色
                 
                 if(_IgnoreHistory)
                 {
@@ -155,7 +155,7 @@ Shader "DeferedRP/TAA"
                 AABBMax = AABBMin = RGBToYCoCg(Color);
                 for(int k = 0 ; k < 9 ; k++)
                 {
-                    float3 C = RGBToYCoCg(tex2D(_OnlyTAA,uv + kOffsets3x3[k] / 1024.0));
+                    float3 C = RGBToYCoCg(tex2D(_LightOut,uv + kOffsets3x3[k] / 1024.0));
 
                     AABBMin = min(AABBMin, C);
                     AABBMax = max(AABBMax, C);
