@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -52,9 +52,6 @@
     <UnityBuildTarget>StandaloneWindows64:19</UnityBuildTarget>
     <UnityVersion>2020.3.26f1c1</UnityVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <Analyzer Include="D:\IDEs\Visual Studio Environment\IDE\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\UniGLTF\Core\Scripts\Extensions\glTFExtensions.cs" />
     <Compile Include="Assets\UniGLTF\UniHumanoid\Scenes\RuntimeBvhLoader.cs" />
@@ -215,17 +212,21 @@
   <ItemGroup>
     <None Include="Assets\RenderScript\Shader\Shadow.cginc" />
     <None Include="Assets\RenderScript\Shader\VSMShadowMapping.shader" />
+    <None Include="Assets\RenderScript\Shader\SSAO.shader" />
     <None Include="Assets\RenderScript\Shader\VerticalBlur.shader" />
     <None Include="Assets\UniGLTF\Resources\Shaders\NormalMapDecoder.shader" />
     <None Include="Assets\RenderScript\Shader\ESMFilter.shader" />
+    <None Include="Assets\RenderScript\Shader\NormalBlurVertical.shader" />
     <None Include="Assets\RenderScript\Shader\BRDF.cginc" />
     <None Include="Assets\RenderScript\Shader\TAA.shader" />
+    <None Include="Assets\RenderScript\Shader\NormalBlurHorizontal.shader" />
     <None Include="Assets\RenderScript\Shader\LightPass.shader" />
     <None Include="Assets\RenderScript\Shader\Random.cginc" />
     <None Include="Assets\RenderScript\Shader\ESMShadowMapping.shader" />
     <None Include="Assets\RenderScript\Shader\Blur.shader" />
     <None Include="Assets\RenderScript\Shader\TestComputeShader.compute" />
     <None Include="Assets\RenderScript\Shader\VSMFilter.shader" />
+    <None Include="Assets\RenderScript\Shader\NormalBlur.shader" />
     <None Include="Assets\RenderScript\Shader\ShadowMappingPass.shader" />
     <None Include="Assets\UniGLTF\UniUnlit\Resources\UniUnlit.shader" />
     <None Include="Assets\RenderScript\Shader\HorizontalBlur.shader" />

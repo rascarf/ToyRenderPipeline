@@ -92,6 +92,8 @@ public class DeferedPipeline : RenderPipeline
         CSRt = new RenderTexture(1024, 1024, 0, RenderTextureFormat.ARGBFloat);
         CSRt.enableRandomWrite = true;
         CSRt.Create();
+
+       // SetUpSSAO();
     }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
@@ -156,6 +158,8 @@ public class DeferedPipeline : RenderPipeline
         {
             ShadowMappingPass(context, camera);
         }
+
+        AOPass(context, camera);
 
         LightPass(context, camera);
 
@@ -372,6 +376,64 @@ public class DeferedPipeline : RenderPipeline
 
         context.ExecuteCommandBuffer(cmd);
         context.Submit();
+    }
+    void SetUpSSAO()
+    {
+        Vector4[] Kernels = new Vector4[64];
+        for(int i = 0; i < Kernels.Length; i++)
+        {
+            float random = Random.Range(0.0f, 1.0f);
+            Vector4 sample = new Vector4(random * 2.0f - 1.0f, random * 2.0f - 1.0f, random, 0.0f);
+
+            sample = sample.normalized;
+
+            sample *= Random.Range(0.0f, 1.0f);
+
+            float scale = i / 64;
+            scale = Mathf.Lerp(0.1f, 1.0f, scale * scale);
+            sample *= scale;
+            Kernels[i] = sample;
+        }
+
+        Shader.SetGlobalVectorArray("_SSAOKernel", Kernels);
+
+        Vector3[] noises = new Vector3[16];
+
+        for(int i = 0; i < 16; i++)
+        {
+            float random = Random.Range(0.0f, 1.0f);
+            Vector3 noise = new Vector3(random * 2.0f - 1.0f, random * 2.0f - 1.0f, 0.0f);
+            noises[i] = noise;
+        }
+
+        Texture2D NoiseTex = new Texture2D(4,4,TextureFormat.RGB24,false,true);
+        NoiseTex.filterMode = FilterMode.Point;
+        NoiseTex.wrapMode = TextureWrapMode.Repeat;
+        NoiseTex.SetPixelData(noises,0,0);
+        NoiseTex.Apply();
+
+        Shader.SetGlobalTexture("_SSAONoiseTex", NoiseTex);
+
+        Vector2 NoiseScale = new Vector2(1024 / 4.0f,1024 / 4.0f);
+        Shader.SetGlobalVector("_SSAONoiseScale", NoiseScale);
+    }
+    void AOPass(ScriptableRenderContext context, Camera Camera)
+    {
+        CommandBuffer cmd = new CommandBuffer();
+        cmd.name = "AOPass";
+
+        RenderTexture Temp = RenderTexture.GetTemporary(1024, 1024, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+
+        cmd.Blit(GBufferID[0], Temp, new Material(Shader.Find("DeferedRP/SSAO")));
+
+        cmd.Blit(Temp, GBufferID[3], new Material(Shader.Find("DeferedRP/NormalBlur")));
+
+        RenderTexture.ReleaseTemporary(Temp); 
+
+        context.ExecuteCommandBuffer(cmd);
+
+        context.Submit();
+
     }
     void LightPass(ScriptableRenderContext context , Camera Camera)
     {
