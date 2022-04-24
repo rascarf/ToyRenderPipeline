@@ -130,6 +130,12 @@ Shader "DeferedRP/SSAO"
             }
 
             sampler2D _MainTex;
+            sampler2D _SSAONoiseTex;
+
+            float4 _SSAONoiseScale;
+            float4 _SSAOKernel[64];
+            float4x4 _ProjectionMatrix;
+
 
             float4 frag (v2f i) : SV_Target
             {
@@ -139,80 +145,92 @@ Shader "DeferedRP/SSAO"
                 float3 normal = tex2D(_GT1, uv).rgb * 2 - 1;
                 float d = UNITY_SAMPLE_DEPTH(tex2D(_GDepth, uv));
 
-                //还原出来的点
+                //重建ShadingPoint(世界空间)
                 float4 worldPos = mul(_vpMatrixInv, float4(uv*2-1, d, 1));
                 worldPos /= worldPos.w;
 
-                // float3 random = tex2D(_SSAONoiseTex,uv).xyz;
-                // float3 Tangent = normalize(random - normal * dot(random,normal));
-                // float3 Bitangent = cross(normal,Tangent);
-                // float3x3 TBN = float3x3(Tangent, Bitangent, normal);
-                // float occlusion = 0.0;
+                float3 RandomVec = tex2D(_SSAONoiseTex,uv / _SSAONoiseScale.xy).xyz;
+                float3 Tangent = normalize(RandomVec - normal * dot(RandomVec,normal));
+                float3 Bitangent = cross(normal,Tangent);
 
-                // for(int i = 0 ; i < 64 ; i++)
-                // {
-                //     float3 Sample = mul(TBN,_SSAOKernel[i].xyz);
+                float3x3 TBN = float3x3(Tangent, Bitangent, normal);
 
-                //     Sample = worldPos + Sample * 0.035;
+                float occlusion = 0.0;
+                float Radius = 5.0;
 
-                //     float4 Offset = float4(Sample,1.0);
-                //     Offset = mul(_vpMatrix,Offset);
-                //     Offset.xyz /= Offset.w;
-                //     Offset.xyz = Offset.xyz * 0.5 + 0.5;
+                //kernelSize == 64
+                //Radius == 1.0
+                for(int i = 0 ; i < 64 ; i++)
+                {
+                    float3 v_s1 = mul(TBN,_SSAOKernel[i].xyz); //世界空间向量
+                    // float3 v_s1 = _SSAOKernel[i].xyz;
 
-                //     float sampleDepth = tex2D(_GDepth, Offset.xy);
-                //     float rangeCheck = smoothstep(0.0, 1.0, 0.035 / abs(d - sampleDepth));
+                    float3 Sample = faceforward(v_s1 , -normal , v_s1);
 
-                //     occlusion += (sampleDepth >= d ? 1.0 : 0.0) * rangeCheck;
-                // }
+                    Sample = worldPos + Sample * Radius;
+
+                    float4 Offset = float4(Sample,1.0); //世界空间
+                    Offset = mul(_vpMatrix,Offset); // Clip空间
+
+                    Offset.xyz /= Offset.w; //NDC空间
+                    Offset.xy = Offset.xy * 0.5 + 0.5; // uv
+
+                    float sampleDepth = tex2D(_GDepth, Offset.xy); //视线最小深度
+                    float rangeCheck = smoothstep(0.0, 1.0, Radius / abs(d - sampleDepth));
+
+                    occlusion += (sampleDepth > Offset.z ? 1.0 : 0.0) * rangeCheck;
+                }
+
+                occlusion = 1.0 - (occlusion / 64.0);
+                return float4(tex2D(_GT3,uv).xyz,occlusion);
 
                 // occlusion = max(0.01, (1.0 - (occlusion / 1.0)));
                 // occlusion = pow(occlusion, _SSAOStrength);
 
                 // return float4(tex2D(_GT3,uv),d)
 
-                const float rcpSampleCount = 1 / 20.0;
-                const float Radius = 0.5;
-                float ao = 0.0;
+                // const float rcpSampleCount = 1 / 20.0;
+                // const float Radius = 0.5;
+                // float ao = 0.0;
 
-                //先获取随机方向，再根据循环索引确定距离，从而得到点的位置
-                for(int s = 0; s < 20 ; s++)
-                {
-                    float3 v_s1  = PickSamplePoint(uv,s);
-                    v_s1  *= sqrt( s + 1.0) * Radius;
-                    v_s1  = faceforward(v_s1 , -normal , v_s1);
+                // //先获取随机方向，再根据循环索引确定距离，从而得到点的位置
+                // for(int s = 0; s < 20 ; s++)
+                // {
+                //     float3 v_s1  = PickSamplePoint(uv,s);
+                //     v_s1  *= sqrt( s + 1.0) * Radius;
+                //     v_s1  = faceforward(v_s1 , -normal , v_s1);
 
-                    //采样点的世界坐标
-                    float3 vpos = worldPos + v_s1;
+                //     //采样点的世界坐标
+                //     float3 vpos = worldPos + v_s1;
 
-                    //裁剪空间的点
-                    float4 pos = mul(_vpMatrix,float4(vpos,1.0f));
+                //     //裁剪空间的点
+                //     float4 pos = mul(_vpMatrix,float4(vpos,1.0f));
 
-                    //NDC下的点
-                    pos /= pos.w;
+                //     //NDC下的点
+                //     pos /= pos.w;
 
-                    //uv下的点
-                    float2 nuv = pos.xy * 0.5 + 0.5;
+                //     //uv下的点
+                //     float2 nuv = pos.xy * 0.5 + 0.5;
 
-                    //采样点的深度
-                    float nd = UNITY_SAMPLE_DEPTH(tex2D(_GDepth, nuv));
+                //     //采样点的深度
+                //     float nd = UNITY_SAMPLE_DEPTH(tex2D(_GDepth, nuv));
 
-                    //ShadingPoint到采样点的向量
-                    float3 v_s2 = pos - worldPos;
+                //     //ShadingPoint到采样点的向量
+                //     float3 v_s2 = pos - worldPos;
 
-                    //采样向量与法线的夹角
-                    float DotVal = dot(v_s2,normal);
+                //     //采样向量与法线的夹角
+                //     float DotVal = dot(v_s2,normal);
 
-                    float RangeCheck = smoothstep(0.0,1.0,0.1 / abs(d - nd));
+                //     float RangeCheck = smoothstep(0.0,1.0,0.1 / abs(d - nd));
 
-                    //ReverseZ
-                    if(nd <= pos.z) // 离得远一些
-                        ao += 1.0 * RangeCheck;
-                }
+                //     //ReverseZ
+                //     if(nd <= pos.z) // 离得远一些
+                //         ao += 1.0 * RangeCheck;
+                // }
 
-                ao = ao * rcpSampleCount;
+                // ao = ao * rcpSampleCount;
 
-                return float4(tex2D(_GT3,uv).xyz,ao);
+                // return float4(tex2D(_GT3,uv).xyz,ao);
 
             }          
             ENDCG

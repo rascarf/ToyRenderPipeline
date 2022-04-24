@@ -93,7 +93,7 @@ public class DeferedPipeline : RenderPipeline
         CSRt.enableRandomWrite = true;
         CSRt.Create();
 
-       // SetUpSSAO();
+        SetUpSSAO();
     }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
@@ -141,6 +141,7 @@ public class DeferedPipeline : RenderPipeline
 
         viewMatrix = camera.worldToCameraMatrix;
         projMatrix = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false);
+        Shader.SetGlobalMatrix("_ProjectionMatrix", projMatrix);
 
         vpMatrix = projMatrix * viewMatrix;
         vpMatrixInv = vpMatrix.inverse;
@@ -382,16 +383,17 @@ public class DeferedPipeline : RenderPipeline
         Vector4[] Kernels = new Vector4[64];
         for(int i = 0; i < Kernels.Length; i++)
         {
-            float random = Random.Range(0.0f, 1.0f);
-            Vector4 sample = new Vector4(random * 2.0f - 1.0f, random * 2.0f - 1.0f, random, 0.0f);
+            Vector4 sample = new Vector4(Random.Range(0.0f, 1.0f) * 2.0f - 1.0f, Random.Range(0.0f, 1.0f) * 2.0f - 1.0f, Random.Range(0.0f, 1.0f), 0.0f);
 
             sample = sample.normalized;
 
             sample *= Random.Range(0.0f, 1.0f);
 
             float scale = i / 64;
+
             scale = Mathf.Lerp(0.1f, 1.0f, scale * scale);
             sample *= scale;
+
             Kernels[i] = sample;
         }
 
@@ -401,8 +403,7 @@ public class DeferedPipeline : RenderPipeline
 
         for(int i = 0; i < 16; i++)
         {
-            float random = Random.Range(0.0f, 1.0f);
-            Vector3 noise = new Vector3(random * 2.0f - 1.0f, random * 2.0f - 1.0f, 0.0f);
+            Vector3 noise = new Vector3(Random.Range(0.0f, 1.0f) * 2.0f - 1.0f, Random.Range(0.0f, 1.0f) * 2.0f - 1.0f, 0.0f);
             noises[i] = noise;
         }
 
