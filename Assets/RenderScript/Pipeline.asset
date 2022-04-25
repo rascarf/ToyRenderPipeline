@@ -41,3 +41,10 @@ MonoBehaviour:
       DepthNormalBias: 0.005
       PcssSearchRadius: 1
       PcssFilterRadius: 7
+  HBAOSettings:
+    mDirectionNumber: 2
+    mStepNumber: 2
+    mAOStrength: 2.62
+    mMaxRadiusPixel: 256
+    mRadius: 0.663
+    mAngleBias: 0.073

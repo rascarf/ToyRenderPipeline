@@ -18,6 +18,9 @@ public class DeferedPipelineAsset : RenderPipelineAsset
     [SerializeField] 
     public CSMSettings cmsSettings;
 
+    [SerializeField]
+    public HBAO HBAOSettings;
+
     protected override RenderPipeline CreatePipeline()
     {
         DeferedPipeline rp = new DeferedPipeline();
@@ -29,6 +32,7 @@ public class DeferedPipelineAsset : RenderPipelineAsset
         rp.BlueNoiseTex = BlueNoiseTex;
         rp.TestComputeShader = TestComputeShader;
         rp.bUseTaa = Taa;
+        rp.HBAOSettings = HBAOSettings;
 
         return rp;
     }

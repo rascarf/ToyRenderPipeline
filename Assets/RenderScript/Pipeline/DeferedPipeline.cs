@@ -44,6 +44,9 @@ public class DeferedPipeline : RenderPipeline
     public Matrix4x4 PreModelProj = Matrix4x4.identity;
     RenderTexture LightOut;
 
+    //HBAO
+    public HBAO HBAOSettings;
+
     //CS
     RenderTexture CSRt;
 
@@ -93,11 +96,12 @@ public class DeferedPipeline : RenderPipeline
         CSRt.enableRandomWrite = true;
         CSRt.Create();
 
-        SetUpSSAO();
+        //SetUpSSAO();
     }
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
         Camera camera = cameras[0];
+        camera.depthTextureMode |= DepthTextureMode.DepthNormals;
 
         Shader.SetGlobalTexture("_DiffuseIBL", DiffuseIBL);
         Shader.SetGlobalTexture("_SpecularIBL", SpecularIBL);
@@ -413,19 +417,24 @@ public class DeferedPipeline : RenderPipeline
         NoiseTex.SetPixelData(noises,0,0);
         NoiseTex.Apply();
 
-        Shader.SetGlobalTexture("_SSAONoiseTex", NoiseTex);
+        Shader.SetGlobalTexture("_AONoiseTex", NoiseTex);
 
         Vector2 NoiseScale = new Vector2(1024 / 4.0f,1024 / 4.0f);
-        Shader.SetGlobalVector("_SSAONoiseScale", NoiseScale);
+        Shader.SetGlobalVector("_AONoiseScale", NoiseScale);
     }
     void AOPass(ScriptableRenderContext context, Camera Camera)
     {
+        HBAOSettings.UpdateHBAOProperties(context, ref Camera);
+
+        var ViewMatrix = Camera.worldToCameraMatrix;
+        Shader.SetGlobalMatrix("_ViewMatrix", ViewMatrix);
+
         CommandBuffer cmd = new CommandBuffer();
         cmd.name = "AOPass";
 
         RenderTexture Temp = RenderTexture.GetTemporary(1024, 1024, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
 
-        cmd.Blit(GBufferID[0], Temp, new Material(Shader.Find("DeferedRP/SSAO")));
+        cmd.Blit(GBufferID[0], Temp, new Material(Shader.Find("DeferedRP/HBAO")));
 
         cmd.Blit(Temp, GBufferID[3], new Material(Shader.Find("DeferedRP/NormalBlur")));
 

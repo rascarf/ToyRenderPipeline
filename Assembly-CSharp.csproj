@@ -208,6 +208,7 @@
     <Compile Include="Assets\UniGLTF\Core\Scripts\UniGLTFVersion_partial.cs" />
     <Compile Include="Assets\UniGLTF\UniHumanoid\PoseModifier\IPoseModifier.cs" />
     <Compile Include="Assets\UniGLTF\UniJSON\Scripts\JsonSchemaValidator\JsonArrayValidator.cs" />
+    <Compile Include="Assets\RenderScript\RenderClass\HBAO.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\RenderScript\Shader\Shadow.cginc" />
@@ -227,6 +228,7 @@
     <None Include="Assets\RenderScript\Shader\TestComputeShader.compute" />
     <None Include="Assets\RenderScript\Shader\VSMFilter.shader" />
     <None Include="Assets\RenderScript\Shader\NormalBlur.shader" />
+    <None Include="Assets\RenderScript\Shader\HBAO.shader" />
     <None Include="Assets\RenderScript\Shader\ShadowMappingPass.shader" />
     <None Include="Assets\UniGLTF\UniUnlit\Resources\UniUnlit.shader" />
     <None Include="Assets\RenderScript\Shader\HorizontalBlur.shader" />

@@ -130,9 +130,9 @@ Shader "DeferedRP/SSAO"
             }
 
             sampler2D _MainTex;
-            sampler2D _SSAONoiseTex;
+            sampler2D _AONoiseTex;
 
-            float4 _SSAONoiseScale;
+            float4 _AONoiseScale;
             float4 _SSAOKernel[64];
             float4x4 _ProjectionMatrix;
 
@@ -149,7 +149,7 @@ Shader "DeferedRP/SSAO"
                 float4 worldPos = mul(_vpMatrixInv, float4(uv*2-1, d, 1));
                 worldPos /= worldPos.w;
 
-                float3 RandomVec = tex2D(_SSAONoiseTex,uv / _SSAONoiseScale.xy).xyz;
+                float3 RandomVec = tex2D(_AONoiseTex,uv / _AONoiseScale.xy).xyz;
                 float3 Tangent = normalize(RandomVec - normal * dot(RandomVec,normal));
                 float3 Bitangent = cross(normal,Tangent);
 
